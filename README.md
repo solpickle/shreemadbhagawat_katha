@@ -2,6 +2,8 @@
 
 বাংলায় শ্রীমদ্ভাগবত অধ্যয়নের জন্য একটি clean editorial website। এতে পরিচয়, নির্বাচিত ২৫টি শ্লোক, কথোপকথন ও ১২ স্কন্ধ, চরিত্র ও সময়রেখা এবং **গল্প ও শিক্ষা** বিভাগ রয়েছে।
 
+প্রকাশিত website: **https://solpickle.github.io/shreemadbhagawat_katha/**
+
 ## মূল website
 
 `srimad_bhagavatam_bengali_explorer.html`
@@ -28,6 +30,8 @@ build_exact_explorer.js               মূল HTML builder
 build_grantha_variant.js              alternative HTML builder
 srimad_bhagavatam_bengali_explorer.html
 validate_bhagavatam_integration.js     content-fidelity validator
+validate_static_site.js                deployment-safe static validator
+.github/workflows/deploy-pages.yml     GitHub Pages deployment
 ```
 
 ## Source Markdown
@@ -72,7 +76,19 @@ Validator যা পরীক্ষা করে:
 - পাঁচটি navigation tab উপস্থিত
 - generated browser JavaScript-এর syntax valid
 
+`validate_bhagavatam_integration.js` approved source Markdown-এর সঙ্গে পূর্ণ fidelity পরীক্ষা করে এবং তাই local workspace-এ চালানো হয়। GitHub Actions Markdown ছাড়াই `validate_static_site.js` চালিয়ে committed HTML, embedded story data, browser script ও font assets যাচাই করে।
+
+## GitHub Pages deployment
+
+`main` branch-এ কোনো commit বা pull request merge হলে GitHub Actions:
+
+1. committed website যাচাই করে;
+2. `srimad_bhagavatam_bengali_explorer.html`-কে deployment artifact-এর `index.html` বানায়;
+3. local font assets সংযুক্ত করে;
+4. GitHub Pages-এ website প্রকাশ করে।
+
+Source Markdown repository-তে upload করা হয় না। Content পরিবর্তনের পরে local machine-এ build ও পূর্ণ fidelity validation চালিয়ে শুধু generated website commit করতে হবে।
+
 ## প্রযুক্তি
 
 Website-টি plain HTML, CSS এবং JavaScript দিয়ে তৈরি। কোনো runtime framework, tracker, sign-in অথবা external API নেই।
-

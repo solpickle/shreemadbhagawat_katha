@@ -4,3 +4,8 @@ node_modules/
 Thumbs.db
 .vscode/
 .idea/
+
+# Approved source Markdown stays outside this repository.
+raw_conversation.md
+BHAGAVATAM_CODEX_INTEGRATION.md
+content/
