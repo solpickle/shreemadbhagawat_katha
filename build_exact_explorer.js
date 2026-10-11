@@ -4,6 +4,62 @@ const path = require("path");
 const source = fs.readFileSync(path.join(__dirname, "..", "raw_conversation.md"), "utf8").replace(/\r\n/g, "\n");
 const integrationSource = fs.readFileSync(path.join(__dirname, "..", "BHAGAVATAM_CODEX_INTEGRATION.md"), "utf8").replace(/\r\n/g, "\n");
 
+function parseFrontmatter(markdown, filename) {
+  const match = markdown.match(/^---\n([\s\S]*?)\n---\n/);
+  if (!match) throw new Error(`Frontmatter missing in detailed lesson: ${filename}`);
+  const metadata = {};
+  match[1].split("\n").forEach(line => {
+    const field = line.match(/^([a-z_]+):\s*(.+)$/);
+    if (!field) return;
+    const value = field[2].trim();
+    if (value.startsWith("[") && value.endsWith("]")) {
+      metadata[field[1]] = value.slice(1, -1).split(",").map(item => item.trim().replace(/^"|"$/g, ""));
+    } else {
+      metadata[field[1]] = value.replace(/^"|"$/g, "");
+    }
+  });
+  return { metadata, body: markdown.slice(match[0].length) };
+}
+
+function readDetailedLessonSources() {
+  const parentDirectory = path.join(__dirname, "..");
+  return fs.readdirSync(parentDirectory)
+    .filter(filename => /^bhagavat_.*\.md$/i.test(filename))
+    .sort((a, b) => a.localeCompare(b, "bn"))
+    .map(filename => {
+      const markdown = fs.readFileSync(path.join(parentDirectory, filename), "utf8").replace(/\r\n/g, "\n");
+      const { metadata, body } = parseFrontmatter(markdown, filename);
+      const required = ["title", "scripture", "skandha", "chapter", "verses", "category", "speaker", "listener"];
+      required.forEach(field => {
+        if (!metadata[field]) throw new Error(`Detailed lesson ${filename}: missing ${field}`);
+      });
+      const instructionMarker = "\n---\n\n## ওয়েবসাইটে সংযোজনের নির্দেশ";
+      const contentEnd = body.indexOf(instructionMarker);
+      const content = (contentEnd >= 0 ? body.slice(0, contentEnd) : body)
+        .trimStart()
+        .replace(/^#\s+[^\n]+\n+/, "")
+        .trim();
+      const oneLine = content.match(/^>\s+\*\*এক বাক্যে শিক্ষা:\*\*\s+(.+)$/m);
+      if (!oneLine) throw new Error(`Detailed lesson ${filename}: one-line teaching missing`);
+      return {
+        id: slugify(metadata.title, `lesson-s${String(metadata.skandha).padStart(2, "0")}-c${String(metadata.chapter).padStart(2, "0")}`),
+        filename,
+        title: metadata.title,
+        scripture: metadata.scripture,
+        skandha: metadata.skandha,
+        chapter: metadata.chapter,
+        verses: metadata.verses,
+        category: metadata.category,
+        speaker: metadata.speaker,
+        listener: metadata.listener,
+        sourcePages: metadata.source_pages || "",
+        tags: metadata.tags || [],
+        oneLineLesson: oneLine[1],
+        content,
+      };
+    });
+}
+
 const ordinalToNumber = new Map([
   ["১ম", 1], ["২য়", 2], ["৩য়", 3], ["৪র্থ", 4], ["৫ম", 5], ["৬ষ্ঠ", 6],
   ["৭ম", 7], ["৮ম", 8], ["৯ম", 9], ["১০ম", 10], ["১১তম", 11], ["১২তম", 12],
@@ -193,6 +249,8 @@ function slugify(text, prefix) {
   }
   return `${prefix}-section-${(hash >>> 0).toString(36)}`;
 }
+
+const detailedLessons = readDetailedLessonSources();
 
 function inline(text) {
   return escapeHtml(withoutEmoji(text))
@@ -384,6 +442,16 @@ function markdownToHtml(markdown, prefix) {
       continue;
     }
 
+    if (/^\d+\.\s+/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\d+\.\s+/.test(lines[i])) {
+        items.push(lines[i].replace(/^\d+\.\s+/, ""));
+        i++;
+      }
+      out.push(`<ol>${items.map(x => `<li>${inline(x)}</li>`).join("")}</ol>`);
+      continue;
+    }
+
     if (!line.trim()) {
       i++;
       continue;
@@ -394,7 +462,7 @@ function markdownToHtml(markdown, prefix) {
     while (
       i < lines.length && lines[i].trim() &&
       !lines[i].startsWith("#") && !lines[i].startsWith("```") &&
-      !lines[i].startsWith(">") && !/^[-*]\s+/.test(lines[i]) &&
+      !lines[i].startsWith(">") && !/^[-*]\s+/.test(lines[i]) && !/^\d+\.\s+/.test(lines[i]) &&
       !/^\s*---+\s*$/.test(lines[i]) && !lines[i].trim().startsWith("|")
     ) {
       paragraph.push(lines[i].trim());
@@ -413,18 +481,35 @@ function renderStoryRows(skandha) {
       ? `<tr class="story-group-row"><th colspan="3">${escapeHtml(story.group)}</th></tr>`
       : "";
     currentGroup = story.group || currentGroup;
-    return `${group}<tr id="${story.id}" class="story-row" data-story-row="${story.id}"><td data-label="ঘটনা ও অধ্যায়"><button class="story-open story-title-button" type="button" data-story="${story.id}" aria-label="বিস্তারিত গল্প পড়ুন: ${escapeHtml(story.fullTitle)}">${escapeHtml(story.fullTitle)}</button></td><td data-label="কী ঘটেছিল"><button class="story-open story-summary-button" type="button" data-story="${story.id}" aria-label="বিস্তারিত গল্প পড়ুন: ${escapeHtml(story.fullTitle)}">${escapeHtml(story.whatHappened)}</button></td><td data-label="কী শিখলাম">${escapeHtml(story.lesson)}</td></tr>`;
+    const depthMark = story.detailKey ? `<span class="depth-mark curated" aria-hidden="true" title="বিস্তারিত গল্প">◇</span>` : "";
+    return `${group}<tr id="${story.id}" class="story-row" data-story-row="${story.id}"><td data-label="ঘটনা ও অধ্যায়"><button class="story-open story-title-button" type="button" data-story="${story.id}" aria-label="বিস্তারিত গল্প পড়ুন: ${escapeHtml(story.fullTitle)}">${depthMark}${escapeHtml(story.fullTitle)}</button></td><td data-label="কী ঘটেছিল"><button class="story-open story-summary-button" type="button" data-story="${story.id}" aria-label="বিস্তারিত গল্প পড়ুন: ${escapeHtml(story.fullTitle)}">${escapeHtml(story.whatHappened)}</button></td><td data-label="কী শিখলাম">${escapeHtml(story.lesson)}</td></tr>`;
   }).join("");
 }
 
 function renderStoryChapterRows(skandha) {
-  return skandha.stories.map(story => `<li data-story-row="${story.id}"><button type="button" class="chapter-story story-open" data-story="${story.id}" aria-label="বিস্তারিত গল্প পড়ুন: ${escapeHtml(story.fullTitle)}"><span>${escapeHtml(story.chapter)} — ${escapeHtml(story.title)}</span><small>${escapeHtml(story.whatHappened)}</small></button></li>`).join("");
+  return skandha.stories.map(story => `<li data-story-row="${story.id}"><button type="button" class="chapter-story story-open" data-story="${story.id}" aria-label="বিস্তারিত গল্প পড়ুন: ${escapeHtml(story.fullTitle)}"><span>${story.detailKey ? `<span class="depth-mark curated" aria-hidden="true" title="বিস্তারিত গল্প">◇</span>` : ""}${escapeHtml(story.chapter)} — ${escapeHtml(story.title)}</span><small>${escapeHtml(story.whatHappened)}</small></button></li>`).join("");
+}
+
+function renderDetailedLessonContent(lesson) {
+  return markdownToHtml(lesson.content, lesson.id).html
+    .replace(/<p><strong>গদ্যের সারার্থ:<\/strong>/g, `<p class="lesson-summary"><strong>গদ্যের সারার্থ:</strong>`)
+    .replace(/<p><strong>শিক্ষা:<\/strong>/g, `<p class="lesson-teaching"><strong>শিক্ষা:</strong>`)
+    .replace(/<p><strong>আমাদের জীবনে:<\/strong>/g, `<p class="lesson-application"><strong>আমাদের জীবনে:</strong>`)
+    .replace(/<p><strong>ব্যাখ্যা:<\/strong>/g, `<p class="lesson-explanation"><strong>ব্যাখ্যা:</strong>`);
+}
+
+function renderDetailedLessons() {
+  const cards = detailedLessons.map(lesson => {
+    const reference = `স্কন্ধ ${String(lesson.skandha).replace(/[0-9]/g, digit => "০১২৩৪৫৬৭৮৯"[Number(digit)])} · অধ্যায় ${String(lesson.chapter).replace(/[0-9]/g, digit => "০১২৩৪৫৬৭৮৯"[Number(digit)])} · শ্লোক ${String(lesson.verses).replace(/[0-9]/g, digit => "০১২৩৪৫৬৭৮৯"[Number(digit)])}`;
+    return `<article class="lesson-entry" id="${lesson.id}" data-lesson-entry><button class="lesson-open" type="button" data-lesson="${lesson.id}" aria-label="বিশদ পাঠ খুলুন: ${escapeHtml(lesson.title)}"><span class="lesson-mark" aria-hidden="true">◆</span><span class="lesson-card-body"><span class="lesson-card-kicker">বিশদ পাঠ</span><strong class="lesson-card-title">${escapeHtml(lesson.title)}</strong><span class="lesson-card-reference">${escapeHtml(reference)}</span><span class="lesson-card-voices"><span><b>বক্তা</b> ${escapeHtml(lesson.speaker)}</span><span><b>শ্রোতা</b> ${escapeHtml(lesson.listener)}</span></span><span class="lesson-card-teaching"><b>এক বাক্যে শিক্ষা</b> ${escapeHtml(lesson.oneLineLesson)}</span></span><span class="lesson-card-arrow" aria-hidden="true">পড়ুন</span></button><template id="template-${lesson.id}"><article class="lesson-reading"><header class="lesson-reading-header"><p><span aria-hidden="true">◆</span> বিশদ পাঠ</p><h3>${escapeHtml(lesson.title)}</h3><dl><div><dt>গ্রন্থ</dt><dd>${escapeHtml(lesson.scripture)}</dd></div><div><dt>স্থান</dt><dd>${escapeHtml(reference)}</dd></div><div><dt>বক্তা</dt><dd>${escapeHtml(lesson.speaker)}</dd></div><div><dt>শ্রোতা</dt><dd>${escapeHtml(lesson.listener)}</dd></div></dl></header>${renderDetailedLessonContent(lesson)}</article></template></article>`;
+  }).join("");
+  return `<section class="detailed-lessons" id="detailed-lessons-title" data-story-mode-panel="lessons" aria-labelledby="detailed-lessons-heading" hidden><header class="detailed-lessons-header"><p><span aria-hidden="true">◆</span> পূর্ণাঙ্গ অধ্যয়ন</p><h3 id="detailed-lessons-heading">বিশদ পাঠ</h3><p>নির্বাচিত প্রসঙ্গের বিস্তৃত পাঠ, ব্যাখ্যা ও জীবনে প্রয়োগ।</p></header><label class="lesson-search-label"><span class="sr-only">বিশদ পাঠ খুঁজুন</span><input id="lesson-search" type="search" placeholder="শিরোনাম, বক্তা বা বিষয় খুঁজুন..." autocomplete="off"></label><div class="lesson-list">${cards}</div><p class="lesson-empty" hidden>এই শব্দে কোনো বিশদ পাঠ পাওয়া যায়নি।</p></section><dialog class="lesson-dialog" id="lesson-dialog" aria-label="বিশদ পাঠ"><div class="lesson-dialog-shell"><button class="lesson-dialog-close" type="button" aria-label="বিশদ পাঠ বন্ধ করুন">বন্ধ করুন</button><div id="lesson-dialog-content"></div></div></dialog>`;
 }
 
 function renderStoryModule() {
   const overview = storyIntegration.skandhas.map(skandha => `<li><button type="button" data-select-skandha="${skandha.number}"><span>${escapeHtml(skandha.ordinal)} স্কন্ধ</span><strong>${escapeHtml(skandha.titleBn)}</strong><small>${escapeHtml(skandha.chapterCountBn)}টি অধ্যায় · ${escapeHtml(skandha.themeBn)}</small></button></li>`).join("");
   const panels = storyIntegration.skandhas.map((skandha, index) => `<section class="skandha-story-panel" id="stories-skandha-${skandha.number}" data-skandha-panel="${skandha.number}" ${index ? "hidden" : ""}><header class="skandha-header"><p>${escapeHtml(skandha.chapterCountBn)}টি অধ্যায়</p><h3>${escapeHtml(skandha.ordinal)} স্কন্ধ — ${escapeHtml(skandha.titleBn)}</h3><p><strong>মূল ভাব:</strong> ${escapeHtml(skandha.themeBn)}</p><p class="memory-line"><strong>এক বাক্যের শিক্ষা:</strong> ${escapeHtml(skandha.memoryLineBn)}</p></header><div class="story-view" data-view="story"><div class="story-table-wrap"><table class="story-table"><thead><tr><th>ঘটনা ও অধ্যায়</th><th>কী ঘটেছিল</th><th>কী শিখলাম</th></tr></thead><tbody>${renderStoryRows(skandha)}</tbody></table></div></div><div class="chapter-view" data-view="chapter" hidden><ol>${renderStoryChapterRows(skandha)}</ol></div><p class="story-empty" hidden>এই শব্দে কোনো গল্প পাওয়া যায়নি।</p></section>`).join("");
-  return `<header class="story-page-header"><p class="story-kicker">পড়ুন • বুঝুন • মনে রাখুন • জীবনে প্রয়োগ করুন</p><h2 id="stories-title">শ্রীমদ্ভাগবত — গল্প ও শিক্ষা</h2><p>১২টি স্কন্ধের প্রধান ঘটনা, তাদের মূল শিক্ষা এবং বিস্তারিত গল্প—এক জায়গায়।</p></header><section class="skandha-overview" aria-labelledby="overview-title"><div class="section-rule"><span>১২ স্কন্ধ এক নজরে</span></div><h3 id="overview-title">স্কন্ধ নির্বাচন করুন</h3><ol>${overview}</ol></section><div class="story-toolbar"><div class="story-view-toggle" role="group" aria-label="গল্প দেখার ধরন"><button class="active" type="button" data-story-view="story" aria-pressed="true">গল্প অনুযায়ী</button><button type="button" data-story-view="chapter" aria-pressed="false">অধ্যায় অনুযায়ী</button></div><label class="story-search-label"><span class="sr-only">গল্প খুঁজুন</span><input id="story-search" type="search" placeholder="গল্প, চরিত্র বা অধ্যায় খুঁজুন..." autocomplete="off"></label></div>${panels}<dialog class="story-dialog" id="story-dialog" aria-labelledby="story-dialog-title"><div class="story-dialog-inner"><button class="story-dialog-close" type="button" aria-label="বন্ধ করুন">বন্ধ করুন</button><p class="story-dialog-reference"><span>স্কন্ধ ও অধ্যায়</span><strong id="story-dialog-reference"></strong></p><h3 id="story-dialog-title"></h3><p class="story-dialog-note">গল্পের সারাংশ ও শিক্ষামূলক ব্যাখ্যা; মূল শ্লোকের বিকল্প নয়।</p><div id="story-dialog-content"></div><div class="story-source"><h4>মূল গ্রন্থে ফিরে যান</h4><p id="story-source-links"></p></div></div></dialog>`;
+  return `<header class="story-page-header"><p class="story-kicker">পড়ুন • বুঝুন • মনে রাখুন • জীবনে প্রয়োগ করুন</p><h2 id="stories-title">শ্রীমদ্ভাগবত — গল্প ও শিক্ষা</h2><p>১২টি স্কন্ধের প্রধান ঘটনা, তাদের মূল শিক্ষা এবং বিস্তারিত গল্প—এক জায়গায়।</p></header><nav class="story-section-tabs" aria-label="গল্প ও শিক্ষার ধরন"><button class="active" type="button" data-story-mode="stories" aria-pressed="true">স্কন্ধভিত্তিক গল্প</button><button type="button" data-story-mode="lessons" aria-pressed="false"><span aria-hidden="true">◆</span> বিশদ পাঠ</button></nav><section data-story-mode-panel="stories"><section class="skandha-overview" aria-labelledby="overview-title"><div class="section-rule"><span>১২ স্কন্ধ এক নজরে</span></div><h3 id="overview-title">স্কন্ধ নির্বাচন করুন</h3><ol>${overview}</ol></section><div class="story-toolbar"><div class="story-view-toggle" role="group" aria-label="গল্প দেখার ধরন"><button class="active" type="button" data-story-view="story" aria-pressed="true">গল্প অনুযায়ী</button><button type="button" data-story-view="chapter" aria-pressed="false">অধ্যায় অনুযায়ী</button></div><label class="story-search-label"><span class="sr-only">গল্প খুঁজুন</span><input id="story-search" type="search" placeholder="গল্প, চরিত্র বা অধ্যায় খুঁজুন..." autocomplete="off"></label></div>${panels}</section>${renderDetailedLessons()}<dialog class="story-dialog" id="story-dialog" aria-labelledby="story-dialog-title"><div class="story-dialog-inner"><button class="story-dialog-close" type="button" aria-label="বন্ধ করুন">বন্ধ করুন</button><p class="story-dialog-reference"><span>স্কন্ধ ও অধ্যায়</span><strong id="story-dialog-reference"></strong></p><h3 id="story-dialog-title"></h3><p class="story-dialog-note">গল্পের সারাংশ ও শিক্ষামূলক ব্যাখ্যা; মূল শ্লোকের বিকল্প নয়।</p><div id="story-dialog-content"></div><div class="story-source"><h4>মূল গ্রন্থে ফিরে যান</h4><p id="story-source-links"></p></div></div></dialog>`;
 }
 
 const rendered = chapters.map(chapter => chapter.storyModule
@@ -458,10 +543,11 @@ const html = `<!DOCTYPE html>
 .verse-collection{margin-top:24px}.verse-entry{display:grid;grid-template-columns:72px minmax(0,1fr);gap:26px;padding:8px 0 44px;margin-bottom:38px;border-bottom:1px solid #ded8cf;scroll-margin-top:72px}.verse-rail{padding-top:2px;text-align:right;border-right:1px solid #d9cfc1;padding-right:16px}.verse-rail span{display:block;color:#a8320c;font-size:1.35rem;font-weight:600;line-height:1}.verse-rail small{display:block;margin-top:8px;color:#73695f;font-size:.72rem;white-space:nowrap}.verse-header{display:flex;align-items:baseline;justify-content:space-between;gap:18px;margin-bottom:14px}.verse-header h3{margin:0;padding:0;color:#8f2b0c;font-size:1.5rem}.verse-header h3:after{display:none}.verse-reference{flex:none;color:#766b60;font-size:.75rem}.verse-context{display:grid;grid-template-columns:1fr 1fr 2fr;gap:0;margin:0 0 18px;border-top:1px solid #e2dcd3;border-bottom:1px solid #e2dcd3}.verse-context>div{padding:9px 13px;border-right:1px solid #e2dcd3}.verse-context>div:first-child{padding-left:0}.verse-context>div:last-child{border-right:0}.verse-context dt{color:#9b3a17;font-size:.78rem;font-weight:600;letter-spacing:.025em}.verse-context dd{margin:3px 0 0;color:#4e463e;font-size:.9rem;line-height:1.5}.verse-text{padding:22px 28px;margin-bottom:18px;border-top:2px solid #bd6e43;background:#fbf8f2;color:#17556f;font-size:1.18rem;line-height:1.9}.verse-text span{display:block}.verse-explanation>p{margin:8px 0;font-size:.98rem;line-height:1.8}.verse-explanation>p strong:first-child{color:#8f2b0c;font-size:.9rem;font-weight:600}.verse-explanation .quote{display:none}
 /* গল্প ও শিক্ষা — একই editorial design system-এর সম্প্রসারণ */
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.story-side-nav{display:grid;gap:2px}.story-side-nav button{width:100%;padding:8px 9px;border:0;border-left:2px solid transparent;background:transparent;color:#595959;text-align:left;cursor:pointer;font-size:.82rem;line-height:1.45}.story-side-nav button:hover,.story-side-nav button.active{color:#9c2d09;background:#f1ede5;border-left-color:#a8320c}.story-side-nav button:focus-visible,.story-open:focus-visible,.story-view-toggle button:focus-visible,.skandha-overview button:focus-visible,.story-dialog-close:focus-visible{outline:3px solid #245775;outline-offset:2px}.story-page-header{padding-bottom:20px;border-bottom:1px solid #ded8cf}.story-page-header .story-kicker{margin:0 0 4px;color:#a8320c;font-size:.8rem;letter-spacing:.025em}.story-page-header h2{margin-bottom:10px}.story-page-header>p:last-child{margin:0;color:#514a43;font-size:1rem}.section-rule{display:flex;align-items:center;gap:12px;margin-top:30px;color:#9c2d09;font-size:.75rem;font-weight:600;letter-spacing:.04em}.section-rule:after{content:"";flex:1;border-top:1px solid #d8d0c5}.skandha-overview h3{margin:8px 0 10px;color:#222;font-size:1.15rem}.skandha-overview ol{display:grid;grid-template-columns:1fr 1fr;gap:0 28px;margin:0;padding:0;list-style:none;border-top:1px solid #ded8cf}.skandha-overview li{border-bottom:1px solid #e5e0d8}.skandha-overview button{display:grid;grid-template-columns:74px 1fr;grid-template-areas:"number title" "number meta";width:100%;padding:12px 4px;border:0;background:transparent;text-align:left;cursor:pointer}.skandha-overview button:hover strong{color:#9c2d09}.skandha-overview button>span{grid-area:number;color:#a8320c;font-size:.82rem}.skandha-overview button>strong{grid-area:title;color:#25211d;font-size:.94rem;font-weight:600}.skandha-overview button>small{grid-area:meta;margin-top:2px;color:#766d64;font-size:.7rem;line-height:1.45}.story-toolbar{position:sticky;top:54px;z-index:8;display:flex;align-items:center;justify-content:space-between;gap:18px;margin:30px 0 0;padding:10px 0;background:rgba(255,255,255,.97);border-bottom:1px solid #ded8cf}.story-view-toggle{display:flex;gap:18px}.story-view-toggle button{padding:5px 0;border:0;border-bottom:2px solid transparent;background:transparent;color:#666;cursor:pointer;font-size:.8rem}.story-view-toggle button.active{color:#9c2d09;border-bottom-color:#a8320c;font-weight:600}.story-search-label{width:min(330px,46%)}#story-search{width:100%;padding:7px 9px;border:1px solid #d8d4cb;border-radius:3px;background:#fff;color:#222;font-size:.78rem}.skandha-story-panel{scroll-margin-top:116px}.skandha-header{padding:25px 0 12px}.skandha-header>p:first-child{margin:0;color:#9c2d09;font-size:.75rem}.content .skandha-header h3{margin:2px 0 5px;padding:0;color:#8f2b0c;font-size:1.55rem}.skandha-header>p{margin:4px 0;color:#4d463e;font-size:.9rem;line-height:1.65}.skandha-header .memory-line{margin-top:9px;padding-left:12px;border-left:2px solid #c87845;color:#2e2924}.story-table-wrap{border-top:2px solid #b9683d;border-bottom:1px solid #ded8cf}.story-table{min-width:0;table-layout:fixed;font-size:.88rem;line-height:1.65}.story-table th,.story-table td{padding:12px 13px}.story-table thead th:nth-child(1){width:28%}.story-table thead th:nth-child(2){width:40%}.story-table thead th:nth-child(3){width:32%}.story-table .story-group-row th{padding:15px 13px 7px;color:#245775;background:#fff;border-bottom:1px solid #d8e0e3;font-size:.82rem}.story-open{font-family:inherit}.story-title-button,.story-summary-button{display:block;width:100%;padding:0;border:0;background:none;color:inherit;text-align:left;cursor:pointer;line-height:inherit}.story-title-button{color:#8f2b0c;font-weight:600}.story-summary-button{text-decoration:underline;text-decoration-color:#d8b8a8;text-underline-offset:3px}.story-title-button:hover,.story-summary-button:hover{color:#07547a}.chapter-view ol{margin:0;padding:0;list-style:none;border-top:2px solid #b9683d}.chapter-view li{border-bottom:1px solid #ded8cf}.chapter-story{display:block;width:100%;padding:13px 6px;border:0;background:#fff;text-align:left;cursor:pointer}.chapter-story>span{display:block;color:#8f2b0c;font-size:.95rem;font-weight:600}.chapter-story>small{display:block;margin-top:4px;color:#4d463e;font-size:.8rem;line-height:1.65}.chapter-story:hover{background:#fcfaf6}.story-empty{padding:30px 0;color:#6d6258!important;text-align:center}.story-dialog{width:min(780px,calc(100% - 32px));max-height:min(86vh,900px);padding:0;border:1px solid #d8d0c5;border-radius:6px;background:#fff;color:#222;box-shadow:0 28px 80px rgba(42,31,23,.25)}.story-dialog::backdrop{background:rgba(35,28,23,.48);backdrop-filter:blur(2px)}.story-dialog-inner{position:relative;padding:38px clamp(24px,6vw,58px) 46px}.story-dialog-close{position:sticky;top:0;z-index:2;float:right;margin:-22px -38px 8px 16px;padding:7px 10px;border:1px solid #d8d0c5;border-radius:3px;background:#fff;color:#8f2b0c;cursor:pointer;font-size:.76rem}.story-dialog-reference{margin:0 0 7px;color:#6e655c;font-size:.78rem}.story-dialog-reference span{margin-right:8px;color:#9c2d09}.story-dialog h3{clear:none;margin:0 0 12px;color:#8f2b0c;font-size:1.7rem;font-weight:500;line-height:1.35}.story-dialog-note{margin:0 0 25px;padding:8px 11px;border-left:2px solid #c87845;background:#fff8ef;color:#675d54;font-size:.76rem;line-height:1.55}.story-detail-section{margin:24px 0}.story-detail-section h4,.story-source h4{margin:0 0 5px;color:#9c2d09;font-size:.86rem;font-weight:600}.story-detail-section p,.story-source p{margin:0;color:#302b27;font-size:1rem;line-height:1.85}.story-detail-section.memory{padding:13px 15px;background:#f8f4ed;border-top:1px solid #ded5c9}.story-source{margin-top:28px;padding-top:18px;border-top:1px solid #ded8cf}.story-source a{color:#07547a;text-underline-offset:3px}.story-source a+a:before{content:" · ";color:#81766b}.story-dialog[open]{animation:story-dialog-in .16s ease-out}@keyframes story-dialog-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.depth-mark{display:inline-block;margin-right:6px;color:#b86133;font-family:Georgia,serif;font-size:.95em;line-height:1}.story-section-tabs{display:flex;gap:24px;margin:22px 0 0;border-bottom:1px solid #ded8cf}.story-section-tabs button{padding:9px 1px 8px;border:0;border-bottom:2px solid transparent;background:transparent;color:#625b54;cursor:pointer;font-size:.86rem}.story-section-tabs button.active{color:#9c2d09;border-bottom-color:#a8320c;font-weight:600}.story-section-tabs button span{margin-right:4px;color:#b86133}.story-section-tabs button:focus-visible,.lesson-open:focus-visible,.lesson-dialog-close:focus-visible,#lesson-search:focus-visible{outline:3px solid #245775;outline-offset:2px}.detailed-lessons{padding-top:30px}.detailed-lessons-header{padding-bottom:16px;border-bottom:1px solid #ded8cf}.detailed-lessons-header>p:first-child{margin:0;color:#a8320c;font-size:.76rem}.content .detailed-lessons-header h3{margin:2px 0 4px;padding:0;color:#8f2b0c;font-size:1.65rem}.detailed-lessons-header>p:last-child{margin:0;color:#5e554d;font-size:.9rem}.lesson-search-label{display:block;width:min(390px,100%);margin:18px 0 8px}#lesson-search{width:100%;padding:8px 10px;border:1px solid #d8d4cb;border-radius:3px;background:#fff;color:#222;font-size:.8rem}.lesson-list{border-top:2px solid #b9683d}.lesson-entry{border-bottom:1px solid #ded8cf}.lesson-open{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:14px;align-items:start;width:100%;padding:20px 8px;border:0;background:#fff;color:#28231f;text-align:left;cursor:pointer}.lesson-open:hover{background:#fcfaf6}.lesson-mark{padding-top:2px;color:#a8320c;font-family:Georgia,serif;font-size:1.05rem}.lesson-card-body{display:grid;gap:3px}.lesson-card-kicker{color:#a8320c;font-size:.69rem;font-weight:600;letter-spacing:.04em}.lesson-card-title{color:#222;font-size:1.12rem;font-weight:600;line-height:1.5}.lesson-card-reference{color:#736960;font-size:.75rem}.lesson-card-voices{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:5px;color:#544d46;font-size:.78rem}.lesson-card-voices b,.lesson-card-teaching b{margin-right:5px;color:#9c2d09;font-weight:600}.lesson-card-teaching{margin-top:8px;color:#2f2a26;font-size:.88rem;line-height:1.7}.lesson-card-arrow{align-self:center;color:#8f2b0c;font-size:.74rem}.lesson-empty{padding:30px 0;color:#6d6258!important;text-align:center}.lesson-dialog{width:min(940px,calc(100% - 32px));max-height:92vh;padding:0;border:1px solid #d8d0c5;border-radius:6px;background:#fff;color:#222;box-shadow:0 28px 80px rgba(42,31,23,.28)}.lesson-dialog::backdrop{background:rgba(35,28,23,.52);backdrop-filter:blur(2px)}.lesson-dialog-shell{position:relative;padding:38px clamp(24px,6vw,70px) 58px}.lesson-dialog-close{position:sticky;top:0;z-index:3;float:right;margin:-22px -48px 10px 18px;padding:7px 10px;border:1px solid #d8d0c5;border-radius:3px;background:#fff;color:#8f2b0c;cursor:pointer;font-size:.76rem}.lesson-reading{max-width:760px;margin:auto}.lesson-reading-header{padding-bottom:24px;border-bottom:1px solid #d8d0c5}.lesson-reading-header>p{margin:0 0 5px;color:#a8320c;font-size:.76rem}.content .lesson-reading-header h3{margin:0 0 17px;padding:0;color:#8f2b0c;font-size:clamp(1.7rem,3vw,2.35rem);line-height:1.4}.lesson-reading-header dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin:0;border-top:1px solid #e4dfd7;border-bottom:1px solid #e4dfd7}.lesson-reading-header dl div{display:grid;grid-template-columns:56px 1fr;gap:8px;padding:7px 9px;border-bottom:1px solid #eee9e1}.lesson-reading-header dl div:nth-last-child(-n+2){border-bottom:0}.lesson-reading-header dt{color:#9c2d09;font-size:.72rem;font-weight:600}.lesson-reading-header dd{margin:0;color:#4a443d;font-size:.78rem}.content .lesson-reading h3{margin:40px 0 11px;padding-top:0;color:#8f2b0c;font-size:1.42rem}.content .lesson-reading h4{margin:28px 0 8px;color:#333;font-size:1.08rem}.content .lesson-reading p{margin:10px 0;color:#2d2925;font-size:1rem;line-height:1.9}.content .lesson-reading blockquote{margin:24px 0;padding:30px 32px 21px 48px;font-size:1.08rem}.content .lesson-reading blockquote:before{left:16px;font-size:4.3rem}.lesson-reading .table-wrap{margin:20px 0}.lesson-reading table{min-width:600px;font-size:.85rem}.lesson-reading th,.lesson-reading td{padding:9px 11px}.lesson-reading ol,.lesson-reading ul{color:#2d2925;font-size:.98rem;line-height:1.85}.lesson-summary,.lesson-teaching,.lesson-application,.lesson-explanation{padding:10px 13px;border-left:2px solid #c87845;background:#fffaf3}.lesson-teaching{border-left-color:#245775;background:#f7fafb}.lesson-dialog[open]{animation:story-dialog-in .16s ease-out}
 @media(max-width:850px){body{font-size:16px}.page.active{display:block}.side{position:relative;top:auto;height:auto;display:block;overflow:visible;padding:12px 18px;border-right:0;border-bottom:1px solid var(--line);background:#fbfaf7}.desktop-toc{display:none}.mobile-toc{display:block}.side a{border:0;border-bottom:1px solid #e5e1da;font-size:.82rem}main{padding:32px 20px 68px}.hero{padding:30px 20px 24px}.tabs{gap:22px}.content h3{margin-top:46px}.content p{font-size:1rem;line-height:1.9}.content blockquote{padding:40px 24px 24px 42px;font-size:1.05rem}.content blockquote:before{left:14px;font-size:4.5rem}}
 @media(max-width:700px){.editorial-map{margin:30px -4px;padding:24px 14px}.editorial-map figcaption strong{font-size:1.18rem}.dialogue-pair{grid-template-columns:1fr;gap:8px}.relation-line{width:120px;margin:auto;transform:rotate(90deg)}.branch-grid{grid-template-columns:1fr}.branch-card:before{display:none}.family-split,.family-split.three{grid-template-columns:1fr;gap:26px;margin-top:28px;padding-top:0}.family-split:before,.family-split:after,.family-branch:before{display:none}.siblings{grid-template-columns:1fr}.level-three{grid-template-columns:1fr;gap:18px;padding-top:0}.level-three:before,.level-three>div:before{display:none}.map-node{width:min(100%,280px);margin:auto}.map-legend{align-items:flex-start;flex-direction:column}.diagram-source pre{font-size:.72rem}.pandava-map .family-split>div:not(.family-branch){margin-bottom:4px}.verse-entry{display:block;padding-bottom:34px;margin-bottom:30px}.verse-rail{display:flex;align-items:center;gap:9px;margin-bottom:10px;padding:0;border:0;text-align:left}.verse-rail span{font-size:1.08rem}.verse-rail small{margin:0}.verse-header{display:block;margin-bottom:12px}.verse-header h3{font-size:1.35rem}.verse-reference{margin-top:4px}.verse-context{grid-template-columns:1fr 1fr}.verse-context .context-wide{grid-column:1/-1;border-top:1px solid #e2dcd3}.verse-context>div:nth-child(2){border-right:0}.verse-context>div{padding:7px 8px}.verse-text{padding:18px 20px;font-size:1.05rem}}
-@media(max-width:700px){.skandha-overview ol{grid-template-columns:1fr}.story-toolbar{top:48px;display:block}.story-view-toggle{margin-bottom:8px}.story-search-label{display:block;width:100%}.story-table,.story-table tbody,.story-table tr,.story-table td{display:block;width:100%}.story-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}.story-table .story-group-row{display:block}.story-table .story-group-row th{display:block}.story-table .story-row{padding:13px 0;border-bottom:1px solid #ded8cf}.story-table .story-row td{display:grid;grid-template-columns:100px 1fr;gap:10px;padding:5px 8px;border:0}.story-table .story-row td:before{content:attr(data-label);color:#9c2d09;font-size:.7rem;font-weight:600}.story-table .story-row td>*{min-width:0}.story-title-button,.story-summary-button{font-size:.9rem}.story-dialog{width:100%;max-width:none;max-height:100%;height:100%;border:0;border-radius:0}.story-dialog-inner{min-height:100%;padding:28px 20px 38px}.story-dialog-close{margin:-16px 0 8px 12px}.story-dialog h3{font-size:1.45rem}.story-detail-section p{font-size:.95rem}.story-side-nav{grid-template-columns:repeat(3,1fr)}.story-side-nav button{text-align:center;border-left:0;border-bottom:2px solid transparent}.story-side-nav button.active{border-left:0;border-bottom-color:#a8320c}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.skip-link{transition:none}.story-dialog[open]{animation:none}}
+@media(max-width:700px){.skandha-overview ol{grid-template-columns:1fr}.story-toolbar{top:48px;display:block}.story-view-toggle{margin-bottom:8px}.story-search-label{display:block;width:100%}.story-table,.story-table tbody,.story-table tr,.story-table td{display:block;width:100%}.story-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}.story-table .story-group-row{display:block}.story-table .story-group-row th{display:block}.story-table .story-row{padding:13px 0;border-bottom:1px solid #ded8cf}.story-table .story-row td{display:grid;grid-template-columns:100px 1fr;gap:10px;padding:5px 8px;border:0}.story-table .story-row td:before{content:attr(data-label);color:#9c2d09;font-size:.7rem;font-weight:600}.story-table .story-row td>*{min-width:0}.story-title-button,.story-summary-button{font-size:.9rem}.story-dialog,.lesson-dialog{width:100%;max-width:none;max-height:100%;height:100%;border:0;border-radius:0}.story-dialog-inner,.lesson-dialog-shell{min-height:100%;padding:28px 20px 38px}.story-dialog-close,.lesson-dialog-close{margin:-16px 0 8px 12px}.story-dialog h3{font-size:1.45rem}.story-detail-section p{font-size:.95rem}.story-side-nav{grid-template-columns:repeat(3,1fr)}.story-side-nav button{text-align:center;border-left:0;border-bottom:2px solid transparent}.story-side-nav button.active{border-left:0;border-bottom-color:#a8320c}.story-section-tabs{gap:18px}.lesson-open{grid-template-columns:22px minmax(0,1fr);gap:9px;padding:17px 3px}.lesson-card-arrow{display:none}.lesson-card-title{font-size:1.02rem}.lesson-reading-header dl{grid-template-columns:1fr}.lesson-reading-header dl div:nth-last-child(2){border-bottom:1px solid #eee9e1}.content .lesson-reading h3{font-size:1.28rem}.content .lesson-reading p{font-size:.95rem}.lesson-reading table{min-width:520px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.skip-link{transition:none}.story-dialog[open],.lesson-dialog[open]{animation:none}}
 @media print{@page{margin:18mm 16mm}body{background:#fff!important;color:#000;font-size:11pt}.skip-link,.tabs,.side{display:none!important}.hero{padding:0 0 8mm;border:0;background:#fff}.eyebrow{font-size:9pt}.hero h1{font-size:26pt}.page{display:none!important}.page.active{display:block!important;max-width:none}.page.active main{padding:0;background:#fff}.content{max-width:none}.content h2,.content h3,.content h4{color:#000;break-after:avoid}.content p,.content li,.content td{color:#111}.content blockquote,.diagram-wrap,.editorial-map,.table-wrap,table,tr{break-inside:avoid;box-shadow:none}.content blockquote{border:1px solid #aaa;color:#111;background:#fff}.diagram-wrap,.editorial-map,.table-wrap{overflow:visible;border-color:#aaa;background:#fff}.diagram{min-width:0;white-space:pre-wrap;color:#111;background:#fff}.diagram-source{display:none}.map-node,.branch-card{background:#fff}table{min-width:0;font-size:9pt}th{color:#000;background:#eee}footer{padding:8mm 0 0;background:#fff;color:#444}}
 </style>
 </head>
@@ -469,7 +555,7 @@ const html = `<!DOCTYPE html>
 <a class="skip-link" id="skip-link" href="#main-0">মূল লেখায় যান</a>
 <header class="hero"><div class="eyebrow">শ্রবণ • কীর্তন • স্মরণ • ভক্তি</div><h1>শ্রীমদ্ভাগবত মহাপুরাণ</h1></header>
 <nav class="tabs" id="tabs" role="tablist" aria-label="প্রধান বিভাগ">${rendered.map((x,i)=>`<button class="tab ${i===0?"active":""}" id="tab-${i}" role="tab" aria-selected="${i===0}" aria-controls="page-${i}" tabindex="${i===0?0:-1}" data-tab="${i}">${x.title}</button>`).join("")}</nav>
-<div id="pages">${rendered.map((x,i)=>`<section class="page ${i===0?"active":""}" id="page-${i}" role="tabpanel" aria-labelledby="tab-${i}" ${i===0?"":"hidden"}><aside class="side" aria-label="এই বিভাগের সূচি">${x.storyModule?`<div class="side-title">১২ স্কন্ধ</div><nav class="story-side-nav" aria-label="স্কন্ধ নির্বাচন">${storyIntegration.skandhas.map((item,index)=>`<button type="button" class="${index===0?"active":""}" data-select-skandha="${item.number}" aria-pressed="${index===0}">${item.ordinal} স্কন্ধ</button>`).join("")}</nav>`:`<div class="desktop-toc"><div class="side-title">এই বিভাগের সূচি</div><input class="search" type="search" aria-label="এই বিভাগে খুঁজুন" placeholder="এই বিভাগে খুঁজুন…" data-search="${i}">${x.nav.map(n=>`<a href="#${n.id}">${n.title}</a>`).join("")}</div><details class="mobile-toc"><summary>এই বিভাগের সূচি</summary><div class="mobile-toc-links"><input class="search" type="search" aria-label="এই বিভাগে খুঁজুন" placeholder="এই বিভাগে খুঁজুন…" data-search="${i}">${x.nav.map(n=>`<a href="#${n.id}">${n.title}</a>`).join("")}</div></details>`}</aside><main class="main-content" id="main-${i}" tabindex="-1"><article class="content" data-content="${i}">${x.html}</article></main></section>`).join("")}</div>
+<div id="pages">${rendered.map((x,i)=>`<section class="page ${i===0?"active":""}" id="page-${i}" role="tabpanel" aria-labelledby="tab-${i}" ${i===0?"":"hidden"}><aside class="side" aria-label="এই বিভাগের সূচি">${x.storyModule?`<div data-story-skandha-nav><div class="side-title">১২ স্কন্ধ</div><nav class="story-side-nav" aria-label="স্কন্ধ নির্বাচন">${storyIntegration.skandhas.map((item,index)=>`<button type="button" class="${index===0?"active":""}" data-select-skandha="${item.number}" aria-pressed="${index===0}">${item.ordinal} স্কন্ধ</button>`).join("")}</nav></div>`:`<div class="desktop-toc"><div class="side-title">এই বিভাগের সূচি</div><input class="search" type="search" aria-label="এই বিভাগে খুঁজুন" placeholder="এই বিভাগে খুঁজুন…" data-search="${i}">${x.nav.map(n=>`<a href="#${n.id}">${n.title}</a>`).join("")}</div><details class="mobile-toc"><summary>এই বিভাগের সূচি</summary><div class="mobile-toc-links"><input class="search" type="search" aria-label="এই বিভাগে খুঁজুন" placeholder="এই বিভাগে খুঁজুন…" data-search="${i}">${x.nav.map(n=>`<a href="#${n.id}">${n.title}</a>`).join("")}</div></details>`}</aside><main class="main-content" id="main-${i}" tabindex="-1"><article class="content" data-content="${i}">${x.html}</article></main></section>`).join("")}</div>
 <footer>॥ ওঁ নমো ভগবতে বাসুদেবায় ॥<br>ঘটনার কালক্রম ও কথনের কালক্রম ইচ্ছাকৃতভাবে আলাদা রাখা হয়েছে।</footer>
 <script>
 const storyData=${JSON.stringify(storyIntegration).replace(/</g, "\\u003c")};
@@ -505,9 +591,11 @@ function openHash(scroll=true){
   if(!target)return false;
   const index=pageIndexFor(target);
   if(index>=0)activateTab(index);
+  if(id==='detailed-lessons-title'||id.startsWith('lesson-'))setStoryMode('lessons',false);
   const storyPanel=target.closest('[data-skandha-panel]');
-  if(storyPanel)selectStorySkandha(Number(storyPanel.dataset.skandhaPanel),false);
+  if(storyPanel){setStoryMode('stories',false);selectStorySkandha(Number(storyPanel.dataset.skandhaPanel),false)}
   if(id.startsWith('story-s'))requestAnimationFrame(()=>openStory(id,true));
+  if(id.startsWith('lesson-'))requestAnimationFrame(()=>openLesson(id,true));
   if(scroll)requestAnimationFrame(()=>target.scrollIntoView({block:'start'}));
   return true;
 }
@@ -569,9 +657,25 @@ const storiesById=new Map(allStories.map(story=>[story.id,story]));
 const detailsByKey=new Map(storyData.details.map(detail=>[detail.detailKey,detail]));
 const storySearch=document.getElementById('story-search');
 const storyDialog=document.getElementById('story-dialog');
+const lessonSearch=document.getElementById('lesson-search');
+const lessonDialog=document.getElementById('lesson-dialog');
 let activeStorySkandha=1;
 let activeStoryView='story';
+let activeStoryMode='stories';
 let storyReturnFocus=null;
+let lessonReturnFocus=null;
+
+function setStoryMode(mode,updateHash=true){
+  activeStoryMode=mode;
+  document.querySelectorAll('[data-story-mode]').forEach(button=>{
+    const active=button.dataset.storyMode===mode;
+    button.classList.toggle('active',active);
+    button.setAttribute('aria-pressed',String(active));
+  });
+  document.querySelectorAll('[data-story-mode-panel]').forEach(panel=>{panel.hidden=panel.dataset.storyModePanel!==mode});
+  document.querySelectorAll('[data-story-skandha-nav]').forEach(nav=>{nav.hidden=mode!=='stories'});
+  if(updateHash)history.replaceState(null,'',mode==='lessons'?'#detailed-lessons-title':'#stories-skandha-'+activeStorySkandha);
+}
 
 function selectStorySkandha(number,scroll=true){
   activeStorySkandha=number;
@@ -666,6 +770,7 @@ function renderSourceLinks(story){
 function openStory(id,updateHash=true){
   const story=storiesById.get(id);
   if(!story||!storyDialog)return;
+  setStoryMode('stories',false);
   selectStorySkandha(story.skandha,false);
   storyReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
   document.getElementById('story-dialog-title').textContent=story.title;
@@ -688,19 +793,56 @@ function openStory(id,updateHash=true){
   storyDialog.querySelector('.story-dialog-close').focus();
 }
 
+function openLesson(id,updateHash=true){
+  const entry=document.getElementById(id);
+  const template=document.getElementById('template-'+id);
+  if(!entry||!template||!lessonDialog)return;
+  setStoryMode('lessons',false);
+  lessonReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
+  const content=document.getElementById('lesson-dialog-content');
+  content.replaceChildren(template.content.cloneNode(true));
+  if(updateHash)history.replaceState(null,'','#'+id);
+  if(!lessonDialog.open)lessonDialog.showModal();
+  lessonDialog.querySelector('.lesson-dialog-close').focus();
+}
+
+function filterLessons(){
+  const query=normalizeSearch(lessonSearch?lessonSearch.value:'');
+  let visibleCount=0;
+  document.querySelectorAll('[data-lesson-entry]').forEach(entry=>{
+    const visible=!query||normalizeSearch(entry.innerText).includes(query);
+    entry.hidden=!visible;
+    if(visible)visibleCount++;
+  });
+  const empty=document.querySelector('.lesson-empty');
+  if(empty)empty.hidden=visibleCount>0;
+}
+
 document.querySelectorAll('[data-select-skandha]').forEach(button=>button.addEventListener('click',()=>selectStorySkandha(Number(button.dataset.selectSkandha))));
 document.querySelectorAll('[data-story-view]').forEach(button=>button.addEventListener('click',()=>setStoryView(button.dataset.storyView)));
+document.querySelectorAll('[data-story-mode]').forEach(button=>button.addEventListener('click',()=>setStoryMode(button.dataset.storyMode)));
 document.addEventListener('click',event=>{
+  const lessonOpener=event.target.closest('[data-lesson]');
+  if(lessonOpener){openLesson(lessonOpener.dataset.lesson);return}
   const opener=event.target.closest('[data-story]');
   if(opener)openStory(opener.dataset.story);
 });
 if(storySearch)storySearch.addEventListener('input',filterStories);
+if(lessonSearch)lessonSearch.addEventListener('input',filterLessons);
 if(storyDialog){
   storyDialog.querySelector('.story-dialog-close').addEventListener('click',()=>storyDialog.close());
   storyDialog.addEventListener('click',event=>{if(event.target===storyDialog)storyDialog.close()});
   storyDialog.addEventListener('close',()=>{
     history.replaceState(null,'','#stories-skandha-'+activeStorySkandha);
     if(storyReturnFocus&&document.contains(storyReturnFocus))storyReturnFocus.focus();
+  });
+}
+if(lessonDialog){
+  lessonDialog.querySelector('.lesson-dialog-close').addEventListener('click',()=>lessonDialog.close());
+  lessonDialog.addEventListener('click',event=>{if(event.target===lessonDialog)lessonDialog.close()});
+  lessonDialog.addEventListener('close',()=>{
+    history.replaceState(null,'','#detailed-lessons-title');
+    if(lessonReturnFocus&&document.contains(lessonReturnFocus))lessonReturnFocus.focus();
   });
 }
 
@@ -712,4 +854,4 @@ else requestAnimationFrame(()=>document.getElementById(decodeURIComponent(locati
 </html>`;
 
 fs.writeFileSync(path.join(__dirname, "srimad_bhagavatam_bengali_explorer.html"), html, "utf8");
-console.log(JSON.stringify({ chapters: rendered.length, sourceCharacters: chapters.reduce((n,x)=>n+x.markdown.length,0), outputBytes: Buffer.byteLength(html) }, null, 2));
+console.log(JSON.stringify({ chapters: rendered.length, detailedLessons: detailedLessons.length, sourceCharacters: chapters.reduce((n,x)=>n+x.markdown.length,0), outputBytes: Buffer.byteLength(html) }, null, 2));

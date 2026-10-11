@@ -52,6 +52,49 @@ embedded.details.forEach(detail => {
   });
 });
 
+function decodeHtml(value) {
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
+function normalizeText(value) {
+  return value.replace(/\s+/g, " ").replace(/\s+([।,;:!?])/g, "$1").trim();
+}
+
+const htmlText = normalizeText(decodeHtml(html.replace(/<[^>]+>/g, " ")));
+const detailedFiles = fs.readdirSync(path.join(__dirname, ".."))
+  .filter(filename => /^bhagavat_.*\.md$/i.test(filename));
+assert(detailedFiles.length >= 1, "No detailed-lesson Markdown sources found outside the repository");
+
+detailedFiles.forEach(filename => {
+  const markdown = fs.readFileSync(path.join(__dirname, "..", filename), "utf8").replace(/\r\n/g, "\n");
+  const title = markdown.match(/^title:\s*"([^"]+)"$/m)?.[1];
+  assert(title && htmlText.includes(title), `Detailed-lesson title missing from HTML: ${filename}`);
+  const body = markdown.replace(/^---\n[\s\S]*?\n---\n/, "");
+  const marker = "\n---\n\n## ওয়েবসাইটে সংযোজনের নির্দেশ";
+  const content = (body.includes(marker) ? body.slice(0, body.indexOf(marker)) : body);
+  const meaningfulLines = content.split("\n").map(line => line.trim()).filter(line => {
+    return line && line !== "---" && !/^\|?\s*:?-{3,}/.test(line);
+  }).map(line => normalizeText(line
+    .replace(/^#{1,6}\s+/, "")
+    .replace(/^>\s*/, "")
+    .replace(/^[-*]\s+/, "")
+    .replace(/^\d+\.\s+/, "")
+    .replace(/\*\*/g, "")
+    .replace(/^\*|\*$/g, "")
+    .replace(/^\||\|$/g, "")
+    .replace(/\s*\|\s*/g, " ")));
+  meaningfulLines.forEach((line, index) => {
+    assert(htmlText.includes(line), `Locked detailed text mismatch in ${filename}, content line ${index + 1}: ${line.slice(0, 60)}`);
+  });
+});
+
+assert(!htmlText.includes("ওয়েবসাইটে সংযোজনের নির্দেশ"), "Implementation instructions leaked into generated HTML");
+
 assert((html.match(/<button class="tab [^"]*" id="tab-/g) || []).length === 5, "Existing tab set was not preserved with one added tab");
 assert(html.includes(">গল্প ও শিক্ষা</button>"), "New tab label missing");
 assert(html.includes("গল্পের সারাংশ ও শিক্ষামূলক ব্যাখ্যা; মূল শ্লোকের বিকল্প নয়।"), "Required story-card note missing");
@@ -64,6 +107,7 @@ console.log(JSON.stringify({
   skandhas: embedded.skandhas.length,
   stories: embedded.storyCount,
   expandedCards: embedded.details.length,
+  detailedLessons: detailedFiles.length,
   exactSourceRowsChecked: sourceRows.length,
   browserScriptSyntax: "valid",
   tabs: 5,
