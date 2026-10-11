@@ -19,6 +19,13 @@ assert(storyData.skandhas.length === 12, `Expected 12 skandhas, found ${storyDat
 assert(storyData.storyCount === 110, `Expected 110 stories, found ${storyData.storyCount}`);
 assert(storyData.details.length === 23, `Expected 23 expanded cards, found ${storyData.details.length}`);
 
+const detailedLessons = (html.match(/class="lesson-entry"/g) || []).length;
+assert(detailedLessons >= 1, "Expected at least one detailed lesson");
+assert(html.includes("ব্রহ্মার প্রার্থনা — কর্ম করব, কিন্তু কর্তার অহংকার যেন না আসে"), "Detailed lesson title is missing");
+assert(html.includes('data-story-mode="lessons"'), "Detailed-lesson navigation is missing");
+assert(html.includes("◆"), "Detailed-lesson importance mark is missing");
+assert(!html.includes("ওয়েবসাইটে সংযোজনের নির্দেশ"), "Implementation instructions leaked into the website");
+
 const scriptMatch = html.match(/<script>([\s\S]*)<\/script>/);
 assert(scriptMatch, "Generated browser script is missing");
 new Function(scriptMatch[1]);
@@ -32,6 +39,7 @@ console.log(JSON.stringify({
   skandhas: storyData.skandhas.length,
   stories: storyData.storyCount,
   expandedCards: storyData.details.length,
+  detailedLessons,
   browserScriptSyntax: "valid",
   fonts: requiredFonts.length,
 }, null, 2));
