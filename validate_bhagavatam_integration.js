@@ -95,8 +95,10 @@ detailedFiles.forEach(filename => {
 
 assert(!htmlText.includes("ওয়েবসাইটে সংযোজনের নির্দেশ"), "Implementation instructions leaked into generated HTML");
 
-assert((html.match(/<button class="tab [^"]*" id="tab-/g) || []).length === 5, "Existing tab set was not preserved with one added tab");
+assert((html.match(/<button class="tab [^"]*" id="tab-/g) || []).length === 6, "Expected six primary tabs after promoting বিশদ পাঠ");
 assert(html.includes(">গল্প ও শিক্ষা</button>"), "New tab label missing");
+assert(html.includes('data-tab="5">বিশদ পাঠ</button>'), "বিশদ পাঠ primary tab missing");
+assert(!html.includes("data-story-mode"), "বিশদ পাঠ is still nested inside গল্প ও শিক্ষা");
 assert(html.includes("গল্পের সারাংশ ও শিক্ষামূলক ব্যাখ্যা; মূল শ্লোকের বিকল্প নয়।"), "Required story-card note missing");
 
 const scriptMatch = html.match(/<script>([\s\S]*)<\/script>/);
@@ -110,5 +112,5 @@ console.log(JSON.stringify({
   detailedLessons: detailedFiles.length,
   exactSourceRowsChecked: sourceRows.length,
   browserScriptSyntax: "valid",
-  tabs: 5,
+  tabs: 6,
 }, null, 2));
