@@ -10,7 +10,8 @@ function assert(condition, message) {
 assert(html.startsWith("<!DOCTYPE html>"), "Main HTML document is missing its doctype");
 assert(html.includes('<html lang="bn">'), "Bengali document language is missing");
 assert(html.includes(">গল্প ও শিক্ষা</button>"), "গল্প ও শিক্ষা tab is missing");
-assert((html.match(/<button class="tab [^"]*" id="tab-/g) || []).length === 5, "Expected five primary tabs");
+assert(html.includes('data-tab="5">বিশদ পাঠ</button>'), "বিশদ পাঠ primary tab is missing");
+assert((html.match(/<button class="tab [^"]*" id="tab-/g) || []).length === 6, "Expected six primary tabs");
 
 const embeddedMatch = html.match(/const storyData=([\s\S]*?);\r?\nconst tabs=/);
 assert(embeddedMatch, "Embedded story data is missing");
@@ -22,7 +23,7 @@ assert(storyData.details.length === 23, `Expected 23 expanded cards, found ${sto
 const detailedLessons = (html.match(/class="lesson-entry"/g) || []).length;
 assert(detailedLessons >= 1, "Expected at least one detailed lesson");
 assert(html.includes("ব্রহ্মার প্রার্থনা — কর্ম করব, কিন্তু কর্তার অহংকার যেন না আসে"), "Detailed lesson title is missing");
-assert(html.includes('data-story-mode="lessons"'), "Detailed-lesson navigation is missing");
+assert(!html.includes("data-story-mode"), "বিশদ পাঠ must not remain nested under গল্প ও শিক্ষা");
 assert(html.includes("◆"), "Detailed-lesson importance mark is missing");
 assert(!html.includes("ওয়েবসাইটে সংযোজনের নির্দেশ"), "Implementation instructions leaked into the website");
 
@@ -35,7 +36,7 @@ requiredFonts.forEach(font => assert(fs.existsSync(font), `Required font is miss
 
 console.log(JSON.stringify({
   html: htmlPath,
-  tabs: 5,
+  tabs: 6,
   skandhas: storyData.skandhas.length,
   stories: storyData.storyCount,
   expandedCards: storyData.details.length,
