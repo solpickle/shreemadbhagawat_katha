@@ -33,6 +33,8 @@ jobs:
         run: |
           mkdir -p _site
           cp srimad_bhagavatam_bengali_explorer.html _site/index.html
+          cp srimad_bhagavatam_bengali_explorer.html _site/srimad_bhagavatam_bengali_explorer.html
+          cp -R articles _site/articles
           cp -R assets _site/assets
           touch _site/.nojekyll
 
