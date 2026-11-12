@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const vishnuArticle = require("./build_vishnu_article").buildArticle();
 
 const source = fs.readFileSync(path.join(__dirname, "..", "raw_conversation.md"), "utf8").replace(/\r\n/g, "\n");
 const integrationSource = fs.readFileSync(path.join(__dirname, "..", "BHAGAVATAM_CODEX_INTEGRATION.md"), "utf8").replace(/\r\n/g, "\n");
@@ -499,10 +500,11 @@ function renderDetailedLessonContent(lesson) {
 }
 
 function renderDetailedLessons() {
+  const articleCard = `<article class="lesson-entry" id="${vishnuArticle.entryId}" data-lesson-entry><a class="lesson-open article-link" href="${vishnuArticle.articlePath}"><span class="lesson-mark" aria-hidden="true">◆</span><span class="lesson-card-body"><span class="lesson-card-kicker">সচিত্র ধারাবাহিক পাঠ</span><strong class="lesson-card-title">${escapeHtml(vishnuArticle.title)}</strong><span class="lesson-card-reference">৮টি পর্ব · সৃষ্টি ও সময়চক্র · শিব ও শক্তিতত্ত্ব</span><span class="lesson-card-teaching">কৃষ্ণ, নারায়ণ ও তিন বিষ্ণুর সম্পর্ক থেকে চতুর্দশ ভুবন, যুগ–মন্বন্তর–কল্প, সদাশিব ও রুদ্র—সারণি ও ছবিসহ বিস্তৃত আলোচনা।</span></span><span class="lesson-card-arrow" aria-hidden="true">পড়ুন →</span></a></article>`;
   const cards = detailedLessons.map(lesson => {
     const reference = `স্কন্ধ ${String(lesson.skandha).replace(/[0-9]/g, digit => "০১২৩৪৫৬৭৮৯"[Number(digit)])} · অধ্যায় ${String(lesson.chapter).replace(/[0-9]/g, digit => "০১২৩৪৫৬৭৮৯"[Number(digit)])} · শ্লোক ${String(lesson.verses).replace(/[0-9]/g, digit => "০১২৩৪৫৬৭৮৯"[Number(digit)])}`;
     return `<article class="lesson-entry" id="${lesson.id}" data-lesson-entry><button class="lesson-open" type="button" data-lesson="${lesson.id}" aria-label="বিশদ পাঠ খুলুন: ${escapeHtml(lesson.title)}"><span class="lesson-mark" aria-hidden="true">◆</span><span class="lesson-card-body"><span class="lesson-card-kicker">বিশদ পাঠ</span><strong class="lesson-card-title">${escapeHtml(lesson.title)}</strong><span class="lesson-card-reference">${escapeHtml(reference)}</span><span class="lesson-card-voices"><span><b>বক্তা</b> ${escapeHtml(lesson.speaker)}</span><span><b>শ্রোতা</b> ${escapeHtml(lesson.listener)}</span></span><span class="lesson-card-teaching"><b>এক বাক্যে শিক্ষা</b> ${escapeHtml(lesson.oneLineLesson)}</span></span><span class="lesson-card-arrow" aria-hidden="true">পড়ুন</span></button><template id="template-${lesson.id}"><article class="lesson-reading"><header class="lesson-reading-header"><p><span aria-hidden="true">◆</span> বিশদ পাঠ</p><h3>${escapeHtml(lesson.title)}</h3><dl><div><dt>গ্রন্থ</dt><dd>${escapeHtml(lesson.scripture)}</dd></div><div><dt>স্থান</dt><dd>${escapeHtml(reference)}</dd></div><div><dt>বক্তা</dt><dd>${escapeHtml(lesson.speaker)}</dd></div><div><dt>শ্রোতা</dt><dd>${escapeHtml(lesson.listener)}</dd></div></dl></header>${renderDetailedLessonContent(lesson)}</article></template></article>`;
-  }).join("");
+  }).join("") + articleCard;
   return `<header class="detailed-lessons-header"><p><span aria-hidden="true">◆</span> পূর্ণাঙ্গ অধ্যয়ন</p><h2 id="detailed-lessons-title">বিশদ পাঠ</h2><p>নির্বাচিত প্রসঙ্গের বিস্তৃত পাঠ, ব্যাখ্যা ও জীবনে প্রয়োগ—একটি ক্রমবর্ধমান পাঠাগার।</p></header><section class="detailed-lessons" aria-labelledby="lesson-index-title"><div class="section-rule"><span>পাঠাগার</span></div><h3 id="lesson-index-title">সকল বিশদ পাঠ</h3><label class="lesson-search-label"><span class="sr-only">বিশদ পাঠ খুঁজুন</span><input id="lesson-search" type="search" placeholder="শিরোনাম, বক্তা বা বিষয় খুঁজুন..." autocomplete="off"></label><div class="lesson-list">${cards}</div><p class="lesson-empty" hidden>এই শব্দে কোনো বিশদ পাঠ পাওয়া যায়নি।</p></section><dialog class="lesson-dialog" id="lesson-dialog" aria-label="বিশদ পাঠ"><div class="lesson-dialog-shell"><button class="lesson-dialog-close" type="button" aria-label="বিশদ পাঠ বন্ধ করুন">বন্ধ করুন</button><div id="lesson-dialog-content"></div></div></dialog>`;
 }
 
@@ -519,7 +521,7 @@ rendered.push({
   id: "detailed-lessons",
   title: "বিশদ পাঠ",
   html: renderDetailedLessons(),
-  nav: detailedLessons.map(lesson => ({ id: lesson.id, title: lesson.title })),
+  nav: [...detailedLessons.map(lesson => ({ id: lesson.id, title: lesson.title })), { id: vishnuArticle.entryId, title: vishnuArticle.title }],
   detailedLessonModule: true,
 });
 
@@ -557,6 +559,7 @@ const html = `<!DOCTYPE html>
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.skip-link{transition:none}.story-dialog[open],.lesson-dialog[open]{animation:none}}
 @media print{@page{margin:18mm 16mm}body{background:#fff!important;color:#000;font-size:11pt}.skip-link,.tabs,.side{display:none!important}.hero{padding:0 0 8mm;border:0;background:#fff}.eyebrow{font-size:9pt}.hero h1{font-size:26pt}.page{display:none!important}.page.active{display:block!important;max-width:none}.page.active main{padding:0;background:#fff}.content{max-width:none}.content h2,.content h3,.content h4{color:#000;break-after:avoid}.content p,.content li,.content td{color:#111}.content blockquote,.diagram-wrap,.editorial-map,.table-wrap,table,tr{break-inside:avoid;box-shadow:none}.content blockquote{border:1px solid #aaa;color:#111;background:#fff}.diagram-wrap,.editorial-map,.table-wrap{overflow:visible;border-color:#aaa;background:#fff}.diagram{min-width:0;white-space:pre-wrap;color:#111;background:#fff}.diagram-source{display:none}.map-node,.branch-card{background:#fff}table{min-width:0;font-size:9pt}th{color:#000;background:#eee}footer{padding:8mm 0 0;background:#fff;color:#444}}
 </style>
+<style>.article-link{text-decoration:none}.article-link:hover .lesson-card-title{color:#8f2b0c}</style>
 </head>
 <body>
 <a class="skip-link" id="skip-link" href="#main-0">মূল লেখায় যান</a>
@@ -844,4 +847,4 @@ else requestAnimationFrame(()=>document.getElementById(decodeURIComponent(locati
 </html>`;
 
 fs.writeFileSync(path.join(__dirname, "srimad_bhagavatam_bengali_explorer.html"), html, "utf8");
-console.log(JSON.stringify({ chapters: rendered.length, detailedLessons: detailedLessons.length, sourceCharacters: chapters.reduce((n,x)=>n+x.markdown.length,0), outputBytes: Buffer.byteLength(html) }, null, 2));
+console.log(JSON.stringify({ chapters: rendered.length, detailedLessons: detailedLessons.length, standaloneArticle: vishnuArticle.articlePath, sourceCharacters: chapters.reduce((n,x)=>n+x.markdown.length,0), outputBytes: Buffer.byteLength(html) }, null, 2));

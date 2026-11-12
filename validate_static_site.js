@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 
 const htmlPath = "srimad_bhagavatam_bengali_explorer.html";
 const html = fs.readFileSync(htmlPath, "utf8");
@@ -34,6 +35,30 @@ new Function(scriptMatch[1]);
 const requiredFonts = [400, 500, 600, 700].map(weight => `assets/fonts/NotoSerifBengali-${weight}.ttf`);
 requiredFonts.forEach(font => assert(fs.existsSync(font), `Required font is missing: ${font}`));
 
+const articlePath = 'articles/vishnu-cosmology.html';
+assert(html.includes(`href="${articlePath}"`), 'Standalone article link is missing from the library');
+const article = fs.readFileSync(articlePath, 'utf8');
+assert(article.includes('<html lang="bn">'), 'Article must use Bengali document language');
+assert((article.match(/class="article-part"/g) || []).length === 8, 'Expected eight complete article parts');
+assert(article.includes('../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title'), 'Article return link is missing');
+assert(!article.includes('images.openai.com') && !article.includes('google.com/s2/favicons'), 'Chat export image links leaked into the article');
+const articleIds = [...article.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
+assert(new Set(articleIds).size === articleIds.length, 'Duplicate article anchor IDs');
+const articleLinks = [...article.matchAll(/(?:src|href)="([^"]+)"/g)].map(match => match[1]);
+articleLinks.forEach(link => {
+  if (/^https?:/.test(link)) return;
+  if (link.startsWith('#')) {
+    if (link.length > 1) assert(articleIds.includes(link.slice(1)), `Article anchor target missing: ${link}`);
+    return;
+  }
+  const file = decodeURIComponent(link.split('#')[0]);
+  assert(fs.existsSync(path.resolve(path.dirname(articlePath), file)), `Article asset or return target missing: ${link}`);
+});
+const articleImages = (article.match(/<img /g) || []).length;
+assert(articleImages === 22, `Expected 22 article illustrations, found ${articleImages}`);
+const articleScript = article.match(/<script>([\s\S]*?)<\/script>/);
+new Function(articleScript[1]);
+
 console.log(JSON.stringify({
   html: htmlPath,
   tabs: 6,
@@ -43,4 +68,5 @@ console.log(JSON.stringify({
   detailedLessons,
   browserScriptSyntax: "valid",
   fonts: requiredFonts.length,
+  standaloneArticle: { parts: 8, illustrations: articleImages, links: 'valid' },
 }, null, 2));

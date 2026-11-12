@@ -20,6 +20,7 @@
 - গল্প ও অধ্যায় অনুযায়ী browsing
 - স্বতন্ত্র **বিশদ পাঠ** tab ও searchable পাঠাগার
 - প্রতিটি বিশদ পাঠের clickable responsive detail view
+- কৃষ্ণ, বিষ্ণু ও শিবতত্ত্ব নিয়ে আট পর্বের স্বতন্ত্র সচিত্র article
 - বাংলা local search
 - local Bengali font assets
 - source-content fidelity validation
@@ -29,6 +30,10 @@
 ```text
 assets/fonts/                         বাংলা font files
 build_exact_explorer.js               মূল HTML builder
+build_vishnu_article.js               সচিত্র article builder ও source fidelity checks
+articles/vishnu-cosmology.html        স্বতন্ত্র পূর্ণাঙ্গ পাঠ
+assets/article.css                    article-এর editorial styling
+assets/images/vishnu/                 article-এর স্থানীয় ছবিগুলো
 build_grantha_variant.js              alternative HTML builder
 srimad_bhagavatam_bengali_explorer.html
 validate_bhagavatam_integration.js     content-fidelity validator
@@ -51,6 +56,12 @@ Builder approved Markdown source ব্যবহার করে। বর্ত
 ### নতুন বিশদ পাঠ যোগ করা
 
 Repository-টির parent directory-তে `bhagavat_*.md` pattern-এ নতুন Markdown রাখুন। বর্তমান frontmatter structure অনুসরণ করে `title`, `scripture`, `skandha`, `chapter`, `verses`, `category`, `speaker` এবং `listener` দিন। এরপর builder চালালে প্রতিটি file স্বয়ংক্রিয়ভাবে **বিশদ পাঠ** tab-এর পাঠাগারে একটি নতুন clickable entry হবে। Source Markdown repository-তে commit হবে না; শুধু generated HTML commit হবে।
+
+### স্বতন্ত্র সচিত্র article
+
+`../vishnu_raw_conversation/raw_conversation.md` এবং একই directory-তে রাখা ছবিগুলো থেকে `build_vishnu_article.js` আট পর্বের সম্পূর্ণ article তৈরি করে। মূল builder এটি স্বয়ংক্রিয়ভাবে চালায়। প্রতিটি retained source line, সারণির cell ও diagram label output-এর সঙ্গে যাচাই করা হয়। কেবল chat-এর greetings, তিনটি Roman-letter user prompt, image-search/source preview links এবং quiz-এর score/button-এর export text বাদ যায়; বাংলা আলোচনার মূল লেখা ও ক্রম অক্ষত থাকে। Image links স্থানীয় ছবিতে প্রতিস্থাপিত হয়।
+
+**বিশদ পাঠ**-এর নতুন link থেকে `articles/vishnu-cosmology.html` খোলে। উপরে ও শেষে ফেরার link আছে। Generated article, CSS ও ব্যবহৃত ছবিগুলো commit হয়; raw conversation parent directory-তেই থাকে।
 
 ## Build
 
@@ -92,6 +103,7 @@ Validator যা পরীক্ষা করে:
 1. committed website যাচাই করে;
 2. `srimad_bhagavatam_bengali_explorer.html`-কে deployment artifact-এর `index.html` বানায়;
 3. local font assets সংযুক্ত করে;
+   standalone article, article styling ও স্থানীয় ছবিগুলোও সংযুক্ত করে;
 4. GitHub Pages-এ website প্রকাশ করে।
 
 Source Markdown repository-তে upload করা হয় না। Content পরিবর্তনের পরে local machine-এ build ও পূর্ণ fidelity validation চালিয়ে শুধু generated website commit করতে হবে।
