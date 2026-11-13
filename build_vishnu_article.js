@@ -97,26 +97,92 @@ function prepareParts(source, manifest) {
 
 // These passages were flattened visual diagrams in the chat export. Reuse every label.
 const diagrams = [
-  [0, 'সর্বোচ্চ ধাম', 'এটি বোঝার সুবিধার জন্য', 'chain'],
-  [0, 'শ্রীকৃষ্ণ (স্বয়ং ভগবান)', 'এটি মূল বিস্তারধারার', 'chain'],
-  [1, 'শ্রীকৃষ্ণ\n\nস্বয়ং ভগবান', 'এখানে একটা কথা বিশেষভাবে', 'chain'],
+  [0, 'সর্বোচ্চ ধাম', 'এটি বোঝার সুবিধার জন্য', 'realms'],
+  [0, 'শ্রীকৃষ্ণ (স্বয়ং ভগবান)', 'এটি মূল বিস্তারধারার', 'expansions'],
+  [1, 'শ্রীকৃষ্ণ\n\nস্বয়ং ভগবান', 'এখানে একটা কথা বিশেষভাবে', 'paired-chain'],
   [2, 'চতুর্দশ ভুবনের সরল মানচিত্র', 'এটি ভাগবতীয় চতুর্দশ লোকের', 'worlds'],
-  [2, 'শ্রীকৃষ্ণ\n\nসমস্ত ভগবৎ-প্রকাশের মূল উৎস', 'ক্ষীরোদকশায়ী বিষ্ণুর ভূমিকা', 'chain'],
+  [2, 'শ্রীকৃষ্ণ\n\nসমস্ত ভগবৎ-প্রকাশের মূল উৎস', 'ক্ষীরোদকশায়ী বিষ্ণুর ভূমিকা', 'paired-chain'],
   [3, 'চার যুগ মিলে', 'এখানে প্রতিটি হিসাব', 'time-scale'],
   [3, 'সত্য\n\nত্রেতা\n\nদ্বাপর\n\nকলি', 'গৌড়ীয় বৈষ্ণব পরম্পরায়', 'yugas'],
   [3, 'ব্রহ্মার এক দিনে ১৪ মনু', '৭ নম্বর বৈবস্বত', 'manus'],
   [3, 'সৃষ্টি ও প্রলয়ের চক্র', '## ৭. এই বিশাল', 'cycle'],
-  [4, 'ব্রহ্মার বর্তমান দিন', 'অর্থাৎ, আমরা ব্রহ্মার', 'time-scale'],
+  [4, 'ব্রহ্মার বর্তমান দিন', 'অর্থাৎ, আমরা ব্রহ্মার', 'current-time'],
   [4, 'এক ব্রহ্মদিবসের মন্বন্তরসমূহ', 'প্রথম ছয়টি মন্বন্তর', 'manus'],
-  [5, 'দুধ\n\nমূল অবস্থা', 'এটি শাস্ত্রের উপমা', 'chain'],
-  [5, 'শ্রীকৃষ্ণ / গোবিন্দ\n\nসমস্ত ভগবৎ-প্রকাশের মূল উৎস', 'এটি গৌড়ীয় তত্ত্বের', 'chain'],
-  [6, 'দুটি ভিন্ন স্তরের প্রকাশ', 'দুটি ধারাকে সরাসরি', 'chain'],
-  [7, 'শ্রীকৃষ্ণ / গোবিন্দ\n\nসমস্ত শক্তির পরম উৎস', 'এটি শক্তিতত্ত্বের', 'chain'],
+  [5, 'দুধ\n\nমূল অবস্থা', 'এটি শাস্ত্রের উপমা', 'comparison'],
+  [5, 'শ্রীকৃষ্ণ / গোবিন্দ\n\nসমস্ত ভগবৎ-প্রকাশের মূল উৎস', 'এটি গৌড়ীয় তত্ত্বের', 'paired-chain'],
+  [6, 'দুটি ভিন্ন স্তরের প্রকাশ', 'দুটি ধারাকে সরাসরি', 'two-levels'],
+  [7, 'শ্রীকৃষ্ণ / গোবিন্দ\n\nসমস্ত শক্তির পরম উৎস', 'এটি শক্তিতত্ত্বের', 'branches'],
 ];
 
-function renderDiagram(text, type) {
+function renderDiagram(text, type, id) {
   const labels = text.split(/\n+/).map(label => label.replace(/^##\s+/, '').trim()).filter(Boolean);
-  return `<figure class="text-map ${type}" aria-label="${escapeHtml(labels[0])}"><div class="map-labels">${labels.map(label => `<span${/^[০-৯0-9]+$/.test(label) ? ' class="map-number"' : ''}>${inline(label)}</span>`).join('\n')}</div></figure>`;
+  const label = index => inline(labels[index]);
+  const node = ({ title, eyebrow, description = [], note = [], tone = '', count }) => `<div class="map-node ${tone}">${count !== undefined ? `<span class="map-count">${label(count)}</span>` : ''}<div class="map-node-copy">${eyebrow !== undefined ? `<span class="map-eyebrow">${label(eyebrow)}</span>` : ''}<strong class="map-title">${label(title)}</strong>${description.map(index => `<span class="map-description">${label(index)}</span>`).join('')}${note.map(index => `<span class="map-note">${label(index)}</span>`).join('')}</div></div>`;
+  const arrow = '<span class="map-connector" aria-hidden="true"></span>';
+  const stack = nodes => `<div class="map-stack">${nodes.map(node).join(arrow)}</div>`;
+  const caption = (title, subtitle) => `<figcaption class="map-caption"><strong>${label(title)}</strong>${subtitle !== undefined ? `<span>${label(subtitle)}</span>` : ''}</figcaption>`;
+  let body;
+  switch (type) {
+    case 'realms':
+      body = stack([
+        { eyebrow: 0, title: 1, description: [2], tone: 'map-root' },
+        { title: 3, description: [4] },
+        { title: 5, description: [6], note: [7], tone: 'map-blue' },
+        { title: 8, description: [9], note: [10] },
+        { title: 11, description: [12], note: [13], tone: 'map-warm' },
+      ]);
+      break;
+    case 'expansions':
+      body = stack(labels.map((_, title) => ({ title, tone: title === 0 ? 'map-root' : title >= 5 ? 'map-blue' : '' })));
+      break;
+    case 'paired-chain':
+    case 'comparison': {
+      const nodes = labels.filter((_, index) => index % 2 === 0).map((_, index) => ({ title: index * 2, description: [index * 2 + 1], tone: index === 0 ? 'map-root' : '' }));
+      body = type === 'comparison' ? `<div class="map-comparison">${nodes.map(node).join(arrow)}</div>` : stack(nodes);
+      break;
+    }
+    case 'worlds': {
+      const lowerIndex = labels.indexOf('সপ্ত অধোলোক');
+      const rows = (start, end) => {
+        const nodes = [];
+        for (let index = start; index < end; index += 3) nodes.push(node({ count: index, title: index + 1, description: [index + 2], tone: labels[index + 1] === 'ভূলোক' ? 'map-blue' : '' }));
+        return nodes.join('');
+      };
+      body = caption(0) + `<div class="world-columns"><div class="world-group"><p class="map-group-label">${label(1)}</p><div class="world-list">${rows(2, lowerIndex)}</div></div><div class="world-group"><p class="map-group-label">${label(lowerIndex)}</p><div class="world-list">${rows(lowerIndex + 1, labels.length)}</div></div></div>`;
+      break;
+    }
+    case 'time-scale':
+      body = stack([0, 3, 6, 9, 12].map(index => ({ eyebrow: index, title: index + 1, description: [index + 2], tone: index === 6 ? 'map-blue' : '' })));
+      break;
+    case 'current-time':
+      body = stack([
+        { eyebrow: 0, title: 1, description: [2] },
+        { eyebrow: 3, title: 4 },
+        { eyebrow: 5, title: 6 },
+        { eyebrow: 7, title: 8, description: [9], tone: 'map-blue' },
+      ]);
+      break;
+    case 'yugas':
+      body = `<div class="yuga-bar">${labels.slice(0, 4).map((_, index) => `<span>${label(index)}</span>`).join('')}</div><figcaption class="map-footnote">${label(4)}</figcaption>`;
+      break;
+    case 'manus':
+      body = caption(0) + `<ol class="manu-track">${labels.slice(1).map((_, index) => `<li${index === 6 ? ' class="manu-current" aria-current="step"' : ''}>${label(index + 1)}</li>`).join('')}</ol>`;
+      break;
+    case 'cycle':
+      body = caption(0) + `<div class="cycle-steps">${[1, 4, 7, 10].map(index => node({ eyebrow: index, title: index + 1, description: [index + 2] })).join(arrow)}</div><p class="cycle-return">${label(13)}</p><div class="cycle-end">${node({ eyebrow: 14, title: 15, tone: 'map-warm' })}</div>`;
+      break;
+    case 'two-levels':
+      body = caption(0) + `<div class="map-levels"><div>${stack([{ title: 1, description: [2], tone: 'map-root' }, { title: 3, description: [4] }])}</div><div><p class="map-group-label">${label(5)}</p>${stack([{ title: 6, description: [7] }, { title: 8, description: [9], tone: 'map-blue' }])}</div></div>`;
+      break;
+    case 'branches':
+      body = node({ title: 0, description: [1], tone: 'map-root' }) + `<div class="map-branches">${[2, 4, 6].map(index => node({ title: index, description: [index + 1], tone: index === 6 ? 'map-blue' : '' })).join('')}</div>`;
+      break;
+    default:
+      throw new Error(`Unknown article map type: ${type}`);
+  }
+  // Every original label must appear exactly once, in its original reading order.
+  if (plain(body) !== plain(labels.join(''))) throw new Error(`Map label/order mismatch: ${type}`);
+  return `<figure id="${id}" class="text-map ${type}" aria-label="${escapeHtml(labels[0])}">${body}</figure>`;
 }
 
 function renderPart(part, index) {
@@ -128,7 +194,7 @@ function renderPart(part, index) {
     if (from < 0 || to < 0) throw new Error(`Diagram boundaries missing: ${start}`);
     const passage = text.slice(from, to).trim();
     const token = `ARTICLEDIAGRAM${tokens.length}`;
-    tokens.push(renderDiagram(passage, type));
+    tokens.push(renderDiagram(passage, type, `map-${index + 1}-${tokens.length + 1}`));
     text = text.slice(0, from) + token + '\n\n' + text.slice(to);
   }
   const lines = text.split('\n');
@@ -189,7 +255,7 @@ function buildArticle() {
   const toc = parts.map((part, index) => `<a href="#part-${index + 1}"><span>${bn(index + 1).padStart(2, '০')}</span>${part.title}</a>`).join('');
   const back = '../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title';
   const html = `<!DOCTYPE html>
-<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} | শ্রীমদ্ভাগবত কথা</title><meta name="description" content="কৃষ্ণ, নারায়ণ, তিন বিষ্ণু, সৃষ্টি, চতুর্দশ ভুবন, সময়চক্র, শিব ও শক্তিতত্ত্ব নিয়ে একটি সচিত্র ধারাবাহিক পাঠ।"><meta name="theme-color" content="#f8f6f1"><link rel="stylesheet" href="../assets/article.css"></head>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} | শ্রীমদ্ভাগবত কথা</title><meta name="description" content="কৃষ্ণ, নারায়ণ, তিন বিষ্ণু, সৃষ্টি, চতুর্দশ ভুবন, সময়চক্র, শিব ও শক্তিতত্ত্ব নিয়ে একটি সচিত্র ধারাবাহিক পাঠ।"><meta name="theme-color" content="#f8f6f1"><link rel="stylesheet" href="../assets/article.css"><link rel="stylesheet" href="../assets/article-maps.css"></head>
 <body><a class="skip-link" href="#article">মূল লেখায় যান</a><div class="reading-progress" aria-hidden="true"></div><header class="article-topbar"><a href="${back}">← বিশদ পাঠে ফিরুন</a><a class="site-name" href="${back}">শ্রীমদ্ভাগবত কথা</a><a href="#contents">সূচিপত্র</a></header>
 <main><header class="article-hero"><p class="eyebrow">বিশদ পাঠ · গৌড়ীয় বৈষ্ণব দর্শন</p><h1>${title}</h1><p class="article-deck">কৃষ্ণ ও বিষ্ণুর প্রকাশ থেকে সৃষ্টি ও সময়চক্র, শিব ও শক্তিতত্ত্ব—আট পর্বে একটি ধারাবাহিক পাঠ।</p><p class="article-meta">৮টি পর্ব <span>·</span> সচিত্র আলোচনা <span>·</span> সারণি ও জ্ঞানচিত্র</p></header><div class="article-layout"><aside class="article-toc" id="contents" aria-label="পাঠের সূচিপত্র"><details open><summary>এই পাঠের সূচি</summary><nav>${toc}</nav></details></aside><article id="article" tabindex="-1">${body}<footer class="article-end"><p>॥ ওঁ নমো ভগবতে বাসুদেবায় ॥</p><a href="${back}">← বিশদ পাঠে ফিরুন</a><a href="#">উপরে ফিরুন ↑</a></footer></article></div></main>
 <script>
