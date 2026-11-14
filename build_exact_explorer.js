@@ -372,8 +372,28 @@ function renderShlokaChapter(markdown, prefix) {
   return { html: `${introRendered.html}<div class="verse-collection">${entries.join("")}</div>${studyRendered.html}`, nav: [...nav, ...studyRendered.nav] };
 }
 
+const introHeadings = {
+  "শ্রীমদ্ভাগবত আসলে কী?": "শ্রীমদ্ভাগবত রচনার পটভূমি",
+  "গ্রন্থটির গঠন": "বারো স্কন্ধের বিষয়বিন্যাস",
+  "কিন্তু পুরো ভাগবতটা কৃষ্ণলীলা নয়": "ভক্তির কাহিনি থেকে কৃষ্ণলীলা",
+  "পরীক্ষিত মহারাজ ও শুকদেব গোস্বামী": "পরীক্ষিৎ ও শুকদেবের কথোপকথন",
+};
+
+function editIntroduction(markdown) {
+  return markdown
+    .replace(/^অবশ্যই। /, "")
+    .replace("এর মূল কথাটি খুব সুন্দরভাবে বলা যায়—", "ভক্তির উদ্দেশ্য সম্পর্কে গ্রন্থটির মূল শিক্ষা এক বাক্যে ধরা যায়।")
+    .replace("এটা বোঝা খুব গুরুত্বপূর্ণ। শ্রীমদ্ভাগবত যেন ধীরে ধীরে পাঠককে **কৃষ্ণের দিকে নিয়ে যায়**।", "বিভিন্ন ভক্তের অভিজ্ঞতার মধ্য দিয়ে শ্রীমদ্ভাগবত ধীরে ধীরে পাঠককে **কৃষ্ণের দিকে নিয়ে যায়**।")
+    .replace("গজেন্দ্রের কাহিনিতে শরণাগতি। এইভাবে একটির পর একটি স্তর পেরিয়ে দশম স্কন্ধে কৃষ্ণের অন্তরঙ্গ লীলায় প্রবেশ।", "গজেন্দ্রের কাহিনিতে ফুটে ওঠে শরণাগতি। ভক্তির এই নানা রূপের মধ্য দিয়ে পাঠক দশম স্কন্ধে কৃষ্ণের অন্তরঙ্গ লীলায় প্রবেশ করেন।")
+    .replace("পুরো গ্রন্থটির একটি অসাধারণ narrative frame আছে।", "পরীক্ষিৎ মহারাজ ও শুকদেব গোস্বামীর কথোপকথন গ্রন্থটির মূল বর্ণনাকে একসূত্রে ধরে রেখেছে।")
+    .replace("তাই ভাগবত শুধু কৃষ্ণের জীবনী নয়। এর গভীর প্রশ্ন হলো:", "কৃষ্ণলীলার বর্ণনার মধ্য দিয়েও ভাগবত মানুষের জীবনের একটি মৌলিক প্রশ্ন সামনে আনে।")
+    .replace("এজন্যই শ্রীমদ্ভাগবতের বিখ্যাত শিক্ষা:", "ভাগবতের এই শিক্ষাটি দ্বিতীয় অধ্যায়ের ষষ্ঠ শ্লোকে প্রকাশ পেয়েছে।")
+    .replace("এই **“অহৈতুকী ভক্তি”** ধারণাটিই আসলে শ্রীমদ্ভাগবতের হৃদয়ের খুব কাছাকাছি।", "**অহৈতুকী ভক্তি** শ্রীমদ্ভাগবতের অন্যতম কেন্দ্রীয় ভাব।");
+}
+
 function markdownToHtml(markdown, prefix) {
   if (prefix === "shlokas") return renderShlokaChapter(markdown, prefix);
+  if (prefix === "intro") markdown = editIntroduction(markdown);
   const lines = markdown.split("\n");
   const out = [];
   const nav = [];
@@ -399,8 +419,9 @@ function markdownToHtml(markdown, prefix) {
       const headingText = withoutEmoji(heading[2]);
       const clean = headingText.replace(/\*\*/g, "").trim();
       const id = slugify(clean, prefix);
-      if (heading[1].length <= 3) nav.push({ id, title: clean });
-      out.push(`<h${level} id="${id}">${inline(headingText)}</h${level}>`);
+      const displayTitle = prefix === "intro" ? introHeadings[clean] ?? headingText : headingText;
+      if (heading[1].length <= 3) nav.push({ id, title: displayTitle === headingText ? clean : displayTitle });
+      out.push(`<h${level} id="${id}">${inline(displayTitle)}</h${level}>`);
       i++;
       continue;
     }
