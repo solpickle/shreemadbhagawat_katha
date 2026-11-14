@@ -40,6 +40,10 @@ function inline(value) {
     .replace(/\*([^*]+)\*/g, '<em>$1</em>');
 }
 
+function localizeLeadingNumber(value) {
+  return value.replace(/^(\d+)(\\?\.)/, (_, number, punctuation) => `${bn(number)}${punctuation.replace('\\', '')}`);
+}
+
 function figure(file, caption, manifest) {
   const image = path.join(sourceDirectory, file);
   if (!fs.existsSync(image)) throw new Error(`Missing local illustration: ${file}`);
@@ -244,7 +248,7 @@ function renderPart(part, index) {
     const heading = line.match(/^(#{1,6})\s+(.+)$/);
     if (heading) {
       const level = Math.min(heading[1].length + 1, 4);
-      out.push(`<h${level} id="part-${index + 1}-section-${++headingCount}">${inline(heading[2])}</h${level}>`);
+      out.push(`<h${level} id="part-${index + 1}-section-${++headingCount}">${inline(localizeLeadingNumber(heading[2]))}</h${level}>`);
       i++;
       if (heading[2].includes('পাঁচটি প্রশ্নে নিজেকে যাচাই করুন')) {
         const quiz = renderQuiz(lines, i);
@@ -272,11 +276,16 @@ function renderPart(part, index) {
       while (i < lines.length && pattern.test(lines[i].trim())) items.push(lines[i++].trim().replace(pattern, '$1'));
       out.push(`<${ordered ? 'ol' : 'ul'}>${items.map(item => `<li>${inline(item)}</li>`).join('')}</${ordered ? 'ol' : 'ul'}>`); continue;
     }
-    const paragraph = [line]; i++;
+    const paragraph = [localizeLeadingNumber(line)]; i++;
     while (i < lines.length && lines[i].trim() && !/^(?:#|>|\||ARTICLE|[-*]\s|\d+\.\s)/.test(lines[i].trim())) paragraph.push(lines[i++].trim());
     out.push(`<p>${paragraph.map(inline).join('<br>')}</p>`);
   }
-  const result = out.join('\n');
+  let result = out.join('\n');
+  // Chat export repeated several image captions as a separate title followed by
+  // a short descriptor. Rejoin those fragments into one editorial caption.
+  result = result.replace(/(<figure class="article-figure">[\s\S]*?<figcaption>([^<]+)<\/figcaption><\/figure>)\n<p>\2<\/p>\n<p>([^<]+)<\/p>/g, (match, figure, caption, context) =>
+    figure.replace('</figcaption>', `<span class="figure-context">${context}</span></figcaption>`)
+  );
   // Verify every retained source line, including all table cells and diagram labels.
   const outputText = plain(result);
   part.text.split('\n').forEach(line => {
