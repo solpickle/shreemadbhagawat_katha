@@ -60,6 +60,11 @@ const quizCards = (article.match(/class="quiz-card"/g) || []).length;
 const quizAnswers = (article.match(/data-correct="true"/g) || []).length;
 assert(quizCards === 5, `Expected 5 article quiz cards, found ${quizCards}`);
 assert(quizAnswers === 5, `Expected exactly one correct answer per quiz card, found ${quizAnswers}`);
+const figureContexts = (article.match(/class="figure-context"/g) || []).length;
+assert(figureContexts === 9, `Expected 9 repaired figure captions, found ${figureContexts}`);
+assert(!/<(?:h[2-4]|p)[^>]*>\d+\./.test(article), 'Arabic display numbering remains in article headings or paragraphs');
+const articleCss = fs.readFileSync('assets/article.css', 'utf8');
+assert(articleCss.includes('@counter-style bengali-numerals'), 'Bengali ordered-list numbering style is missing');
 const articleScript = article.match(/<script>([\s\S]*?)<\/script>/);
 new Function(articleScript[1]);
 
@@ -72,5 +77,5 @@ console.log(JSON.stringify({
   detailedLessons,
   browserScriptSyntax: "valid",
   fonts: requiredFonts.length,
-  standaloneArticle: { parts: 8, illustrations: articleImages, quizCards, links: 'valid' },
+  standaloneArticle: { parts: 8, illustrations: articleImages, quizCards, repairedCaptions: figureContexts, numbering: 'Bengali', links: 'valid' },
 }, null, 2));
