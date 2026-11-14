@@ -490,6 +490,7 @@ function markdownToHtml(markdown, prefix) {
   const lines = markdown.split("\n");
   const out = [];
   const nav = [];
+  const skandhaStops = [];
   let i = 0;
 
   while (i < lines.length) {
@@ -513,13 +514,20 @@ function markdownToHtml(markdown, prefix) {
       const id = slugify(clean, prefix);
       const isDialogue = prefix === "conversations" && /^[④-⑳]/u.test(clean);
       const isSkandha = prefix === "conversations" && /^স্কন্ধ [০-৯]+ /u.test(clean);
-      const level = isDialogue ? 4 : isSkandha ? 3 : Math.min(heading[1].length + 1, 4);
+      const isOverview = prefix === "conversations" && clean === "প্রথমে Master Architecture";
+      const level = isDialogue ? 4 : isSkandha || isOverview ? 3 : Math.min(heading[1].length + 1, 4);
       const headings = prefix === "intro" ? introHeadings
         : prefix === "conversations" ? conversationHeadings
         : prefix.startsWith("shlokas-") ? verseSectionHeadings : {};
       const displayTitle = (prefix === "conversations" ? conversationHeadingValue(headings, clean) : headings[clean]) ?? headingText;
       if (heading[1].length <= 3) nav.push({ id, title: displayTitle === headingText ? clean : displayTitle });
-      out.push(`<h${level} id="${id}">${inline(displayTitle)}</h${level}>`);
+      if (isSkandha) {
+        const [number, topic] = displayTitle.split(" — ", 2);
+        skandhaStops.push({ id, number, topic, position: out.length });
+        out.push(`<h3 id="${id}" class="skandha-stop"><span>${inline(number)}</span> ${inline(topic)}</h3>`);
+      } else {
+        out.push(`<h${level} id="${id}">${inline(displayTitle)}</h${level}>`);
+      }
       i++;
       continue;
     }
@@ -591,7 +599,27 @@ function markdownToHtml(markdown, prefix) {
     out.push(`<p>${inline(paragraph.join("\n")).replace(/\n/g, "<br>")}</p>`);
   }
 
+  if (skandhaStops.length) addSkandhaNavigation(out, skandhaStops);
   return { html: out.join("\n"), nav };
+}
+
+function addSkandhaNavigation(blocks, stops) {
+  const overview = blocks.findIndex(block => block.startsWith("<h3 "));
+  const recap = blocks.findLastIndex(block => block.startsWith("<h2 "));
+  const recapId = blocks[recap].match(/id="([^"]+)"/)[1];
+  for (let index = stops.length - 1; index >= 0; index--) {
+    const previous = stops[index - 1];
+    const next = stops[index + 1];
+    const links = [
+      previous && `<a rel="prev" href="#${previous.id}">← ${previous.number}</a>`,
+      next ? `<a rel="next" href="#${next.id}">${next.number} পড়ুন →</a>`
+        : `<a href="#${recapId}">বারো স্কন্ধের সারাংশ →</a>`,
+    ].filter(Boolean);
+    blocks.splice(next?.position ?? recap, 0, `<nav class="skandha-links skandha-step" aria-label="${stops[index].number} থেকে অন্য অংশে যান">${links.join("")}</nav>`);
+  }
+  const links = stops.map(({ id, number, topic }) =>
+    `<li><a href="#${id}"><span>${inline(number)}</span>${inline(topic)}</a></li>`);
+  blocks.splice(overview, 0, `<nav class="skandha-links skandha-index" aria-label="স্কন্ধ ধরে পড়ুন"><p>স্কন্ধ ধরে পড়ুন</p><ul>${links.join("")}</ul></nav>`);
 }
 
 function renderStoryRows(skandha) {
@@ -679,6 +707,21 @@ const html = `<!DOCTYPE html>
 @media print{@page{margin:18mm 16mm}body{background:#fff!important;color:#000;font-size:11pt}.skip-link,.tabs,.side{display:none!important}.hero{padding:0 0 8mm;border:0;background:#fff}.eyebrow{font-size:9pt}.hero h1{font-size:26pt}.page{display:none!important}.page.active{display:block!important;max-width:none}.page.active main{padding:0;background:#fff}.content{max-width:none}.content h2,.content h3,.content h4{color:#000;break-after:avoid}.content p,.content li,.content td{color:#111}.content blockquote,.diagram-wrap,.editorial-map,.table-wrap,table,tr{break-inside:avoid;box-shadow:none}.content blockquote{border:1px solid #aaa;color:#111;background:#fff}.diagram-wrap,.editorial-map,.table-wrap{overflow:visible;border-color:#aaa;background:#fff}.diagram{min-width:0;white-space:pre-wrap;color:#111;background:#fff}.diagram-source{display:none}.map-node,.branch-card{background:#fff}table{min-width:0;font-size:9pt}th{color:#000;background:#eee}footer{padding:8mm 0 0;background:#fff;color:#444}}
 </style>
 <style>.article-link{text-decoration:none}.article-link:hover .lesson-card-title{color:#8f2b0c}</style>
+<style>
+.content .skandha-stop{margin-top:2.4rem;padding-top:.8rem;border-top:1px solid var(--line)}
+.skandha-stop span{display:block;margin-bottom:.3rem;color:#8f2b0c;font-size:.78rem;font-weight:600}
+.skandha-links a{color:#713009;text-underline-offset:.2em;text-decoration-color:#bc9b85}
+.skandha-links a:focus-visible{outline:3px solid #245775;outline-offset:3px}
+.content .skandha-index{margin:1.25rem 0 2rem;padding-block:.75rem;border-block:1px solid var(--line)}
+.content .skandha-index p{margin:0 0 .5rem;color:#8f2b0c;font-weight:600}
+.content .skandha-index ul{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));gap:0 1rem;margin:0;padding:0;list-style:none}
+.content .skandha-index li{margin:0}
+.skandha-index a{display:flex;gap:.75rem;align-items:baseline;padding:.32rem 0;font-size:.9rem}
+.skandha-index a span{flex:none;font-size:.75rem;color:#65564b}
+.skandha-step{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.75rem;margin-block:1.1rem .4rem;font-size:.88rem}
+.skandha-step a:last-child{margin-inline-start:auto}
+@media print{.skandha-links{display:none}}
+</style>
 </head>
 <body>
 <a class="skip-link" id="skip-link" href="#main-0">মূল লেখায় যান</a>
@@ -771,7 +814,7 @@ document.querySelectorAll('[data-search]').forEach(input=>input.addEventListener
   const children=[...page.querySelector('.content').children];
   children.forEach(el=>el.classList.remove('hidden-by-search'));
   if(!q)return;
-  children.forEach(el=>el.classList.toggle('hidden-by-search',!el.innerText.toLocaleLowerCase('bn').includes(q)));
+  children.forEach(el=>el.classList.toggle('hidden-by-search',el.classList.contains('skandha-links')||!el.innerText.toLocaleLowerCase('bn').includes(q)));
   children.forEach((el,i)=>{
     if(el.classList.contains('hidden-by-search'))return;
     for(let j=i-1;j>=0;j--){
