@@ -56,6 +56,10 @@ articleLinks.forEach(link => {
 });
 const articleImages = (article.match(/<img /g) || []).length;
 assert(articleImages === 22, `Expected 22 article illustrations, found ${articleImages}`);
+const quizCards = (article.match(/class="quiz-card"/g) || []).length;
+const quizAnswers = (article.match(/data-correct="true"/g) || []).length;
+assert(quizCards === 5, `Expected 5 article quiz cards, found ${quizCards}`);
+assert(quizAnswers === 5, `Expected exactly one correct answer per quiz card, found ${quizAnswers}`);
 const articleScript = article.match(/<script>([\s\S]*?)<\/script>/);
 new Function(articleScript[1]);
 
@@ -68,5 +72,5 @@ console.log(JSON.stringify({
   detailedLessons,
   browserScriptSyntax: "valid",
   fonts: requiredFonts.length,
-  standaloneArticle: { parts: 8, illustrations: articleImages, links: 'valid' },
+  standaloneArticle: { parts: 8, illustrations: articleImages, quizCards, links: 'valid' },
 }, null, 2));
