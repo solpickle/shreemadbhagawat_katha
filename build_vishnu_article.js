@@ -185,6 +185,40 @@ function renderDiagram(text, type, id) {
   return `<figure id="${id}" class="text-map ${type}" aria-label="${escapeHtml(labels[0])}">${body}</figure>`;
 }
 
+function renderQuiz(lines, start) {
+  const questions = [];
+  const optionCounts = [3, 3, 3, 2, 3];
+  let i = start;
+  while (i < lines.length && questions.length < 5) {
+    while (i < lines.length && !lines[i].trim()) i++;
+    const match = i < lines.length && lines[i].trim().match(/^(\d+)\\?\.\s+(.+)$/);
+    if (!match) break;
+    const number = Number(match[1]);
+    const question = match[2];
+    i++;
+    const group = [];
+    while (i < lines.length && group.length < optionCounts[questions.length] + 1) {
+      const current = lines[i].trim();
+      if (current) group.push(current);
+      i++;
+    }
+    if (group.length !== optionCounts[questions.length] + 1) throw new Error(`Incomplete quiz question: ${question}`);
+    questions.push({ number, question, options: group.slice(0, -1), answer: group.at(-1) });
+  }
+  if (questions.length !== 5) throw new Error(`Expected five quiz questions, found ${questions.length}`);
+
+  // Correct choices are determined from the retained source answer lines.
+  const correct = [1, 0, 2, 1, 0];
+  const cards = questions.map((item, questionIndex) => {
+    const id = `quiz-question-${item.number}`;
+    const options = item.options.map((option, optionIndex) =>
+      `<button class="quiz-option" type="button" data-correct="${optionIndex === correct[questionIndex]}" aria-describedby="${id}-feedback"><span class="quiz-choice" aria-hidden="true">${String.fromCharCode(2453 + optionIndex)}</span><span>${inline(option)}</span></button>`
+    ).join('');
+    return `<section class="quiz-card" aria-labelledby="${id}"><div class="quiz-question"><span class="quiz-number" aria-hidden="true">${bn(item.number).padStart(2, '০')}</span><h4 id="${id}">${inline(item.question)}</h4></div><div class="quiz-options">${options}</div><div class="quiz-feedback" id="${id}-feedback" role="status" aria-live="polite" hidden><span class="quiz-result"></span><p>${inline(item.answer)}</p></div></section>`;
+  }).join('');
+  return { html: `<div class="article-quiz" data-quiz><div class="quiz-intro"><p>সংক্ষিপ্ত জ্ঞানপরীক্ষা</p><span class="quiz-score" aria-live="polite">০ / ৫ উত্তর দেওয়া হয়েছে</span></div>${cards}</div>`, next: i };
+}
+
 function renderPart(part, index) {
   const tokens = [];
   let text = part.text;
@@ -211,7 +245,13 @@ function renderPart(part, index) {
     if (heading) {
       const level = Math.min(heading[1].length + 1, 4);
       out.push(`<h${level} id="part-${index + 1}-section-${++headingCount}">${inline(heading[2])}</h${level}>`);
-      i++; continue;
+      i++;
+      if (heading[2].includes('পাঁচটি প্রশ্নে নিজেকে যাচাই করুন')) {
+        const quiz = renderQuiz(lines, i);
+        out.push(quiz.html);
+        i = quiz.next;
+      }
+      continue;
     }
     if (line.startsWith('|') && i + 1 < lines.length && /^\|[\s:|-]+\|$/.test(lines[i + 1].trim())) {
       const rows = [];
@@ -241,7 +281,7 @@ function renderPart(part, index) {
   const outputText = plain(result);
   part.text.split('\n').forEach(line => {
     if (!line.trim() || /^ARTICLEFIGURE\d+$/.test(line) || /^\|[\s:|-]+\|$/.test(line.trim())) return;
-    const expected = plain(line.replace(/^#{1,6}\s+/, '').replace(/^>\s?/, '').replace(/^[-*]\s+/, '').replace(/^\d+\.\s+/, '').replace(/\|/g, '').replace(/&#x20;/g, ''));
+    const expected = plain(line.replace(/^#{1,6}\s+/, '').replace(/^>\s?/, '').replace(/^[-*]\s+/, '').replace(/^\d+\\?\.\s+/, '').replace(/\|/g, '').replace(/&#x20;/g, ''));
     if (expected && !outputText.includes(expected)) throw new Error(`Article fidelity mismatch in part ${index + 1}: ${line}`);
   });
   return result;
@@ -264,6 +304,28 @@ const updateProgress=()=>{const range=document.documentElement.scrollHeight-inne
 addEventListener('scroll',updateProgress,{passive:true});addEventListener('resize',updateProgress);updateProgress();
 const links=[...document.querySelectorAll('.article-toc nav a')];
 if('IntersectionObserver' in window){const observer=new IntersectionObserver(entries=>{for(const entry of entries){if(entry.isIntersecting){links.forEach(link=>{const active=link.hash==='#'+entry.target.id;link.classList.toggle('active',active);if(active)link.setAttribute('aria-current','location');else link.removeAttribute('aria-current')})}}},{rootMargin:'-10% 0px -75% 0px'});document.querySelectorAll('.article-part').forEach(part=>observer.observe(part))}
+document.querySelectorAll('[data-quiz]').forEach(quiz=>{
+  const cards=[...quiz.querySelectorAll('.quiz-card')];
+  const score=quiz.querySelector('.quiz-score');
+  cards.forEach(card=>{
+    card.querySelectorAll('.quiz-option').forEach(option=>option.addEventListener('click',()=>{
+      const firstAnswer=!card.classList.contains('answered');
+      card.classList.add('answered');
+      card.querySelectorAll('.quiz-option').forEach(button=>{
+        button.disabled=true;
+        button.classList.toggle('is-correct',button.dataset.correct==='true');
+      });
+      option.classList.add(option.dataset.correct==='true'?'is-selected-correct':'is-selected-wrong');
+      const feedback=card.querySelector('.quiz-feedback');
+      feedback.hidden=false;
+      feedback.querySelector('.quiz-result').textContent=option.dataset.correct==='true'?'সঠিক উত্তর':'সঠিক উত্তরটি দেখুন';
+      if(firstAnswer){
+        const answered=cards.filter(item=>item.classList.contains('answered')).length;
+        score.textContent=answered.toLocaleString('bn-BD')+' / ৫ উত্তর দেওয়া হয়েছে';
+      }
+    }));
+  });
+});
 </script></body></html>`;
   fs.mkdirSync(path.join(__dirname, 'articles'), { recursive: true });
   fs.writeFileSync(path.join(__dirname, articlePath), html);
