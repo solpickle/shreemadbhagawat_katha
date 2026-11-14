@@ -205,7 +205,7 @@ const chapters = [
   },
   {
     id: "shlokas",
-    title: "২৫ শ্লোক",
+    title: "নির্বাচিত শ্লোক",
     markdown: between(
       "এই ২৫টি শ্লোক কোনো শাস্ত্রীয় বা আনুষ্ঠানিক শ্রেষ্ঠ তালিকা নয়",
       "\n----\n\n```\nThanks. There are so many"
@@ -348,8 +348,14 @@ function renderShlokaChapter(markdown, prefix) {
   const introText = markdown.slice(0, firstVerse).trim();
   const versesText = markdown.slice(firstVerse, studyStart < 0 ? markdown.length : studyStart);
   const studyText = studyStart < 0 ? "" : markdown.slice(studyStart).trim();
-  const introRendered = markdownToHtml(introText, `${prefix}-intro`);
-  const studyRendered = studyText ? markdownToHtml(studyText, `${prefix}-study`) : { html: "", nav: [] };
+  const introRendered = markdownToHtml(
+    introText.replace(/^এই ২৫টি শ্লোক[^\n]+/, "পরম সত্যের ধ্যান দিয়ে শুরু হয় শ্রীমদ্ভাগবত। এখানে নির্বাচিত ২৫টি শ্লোক সেই সূচনা থেকে ভক্তি, শ্রবণ-কীর্তন, হরিনাম ও শরণাগতির মধ্য দিয়ে কৃষ্ণলীলা ও প্রেমের দিকে নিয়ে যায়। প্রতিটি শ্লোকের সঙ্গে আছে সহজ বাংলা অর্থ এবং বক্তা, শ্রোতা ও প্রসঙ্গের পরিচয়।"),
+    `${prefix}-intro`,
+  );
+  const studyRendered = studyText ? markdownToHtml(studyText
+    .replace("সব ২৫টি একসঙ্গে মুখস্থ করার দরকার নেই। আমি প্রথমে এই **৭টি** নিতাম:", "মুখস্থ করার জন্য শুরুতে এই **সাতটি শ্লোক** বেছে নেওয়া যেতে পারে।")
+    .replace("এগুলিকে একসঙ্গে দেখলে একটা খুব সুন্দর progression তৈরি হয়:", "এই শ্লোকগুলি মিলিয়ে পড়লে ভক্তির অনুশীলন কীভাবে এগোয়, তা ধাপে ধাপে বোঝা যায়।"),
+    `${prefix}-study`) : { html: "", nav: [] };
   const nav = [...introRendered.nav];
   const entries = [];
   const versePattern = /^###\s+([০-৯0-9]+)\.\s+([^\n]+)\n([\s\S]*?)(?=^###\s+[০-৯0-9]+\.|(?![\s\S]))/gm;
@@ -363,7 +369,11 @@ function renderShlokaChapter(markdown, prefix) {
     const lines = body.split("\n");
     const verseLines = lines.filter(line => line.trim().startsWith(">")).map(line => line.replace(/^>\s?/, "").replace(/\*\*/g, "").trim()).filter(Boolean);
     const remaining = lines.filter(line => !line.trim().startsWith(">") && !/^\*\*[০-৯.]+\*\*$/.test(line.trim()) && !/^---+$/.test(line.trim())).join("\n").trim();
-    const explanation = markdownToHtml(remaining, `${prefix}-note-${index}`).html;
+    const explanation = markdownToHtml(remaining
+      .replace("**Flow:**", "**ভক্তির ধারা:**")
+      .replace("এখানেই ভাগবতের এক অপূর্ব রহস্য:", "দামোদরলীলার তাৎপর্য ধরা পড়ে ভক্তের প্রেমে।")
+      .replace("খুব সহজে মনে রাখার অংশ:", "শ্লোকটির মূল স্মরণসূত্র"),
+      `${prefix}-note-${index}`).html;
     const id = `${prefix}-verse-${reference.replace(/\./g, "-") || index}`;
     const context = verseContext[reference] || ["বর্ণনাকারী", "শ্রোতা", "প্রসঙ্গটি যাচাইাধীন।"];
     nav.push({ id, title: `${bengaliNumber(index)} · ${title}` });
@@ -377,6 +387,11 @@ const introHeadings = {
   "গ্রন্থটির গঠন": "বারো স্কন্ধের বিষয়বিন্যাস",
   "কিন্তু পুরো ভাগবতটা কৃষ্ণলীলা নয়": "ভক্তির কাহিনি থেকে কৃষ্ণলীলা",
   "পরীক্ষিত মহারাজ ও শুকদেব গোস্বামী": "পরীক্ষিৎ ও শুকদেবের কথোপকথন",
+};
+
+const verseSectionHeadings = {
+  "শ্রীমদ্ভাগবত — ২৫টি গুরুত্বপূর্ণ শ্লোক": "ভক্তিপথের ২৫টি নির্বাচিত শ্লোক",
+  "২৫টি থেকে প্রথমে কোনগুলি মুখস্থ করবেন?": "মুখস্থের জন্য সাতটি শ্লোক",
 };
 
 function editIntroduction(markdown) {
@@ -419,7 +434,8 @@ function markdownToHtml(markdown, prefix) {
       const headingText = withoutEmoji(heading[2]);
       const clean = headingText.replace(/\*\*/g, "").trim();
       const id = slugify(clean, prefix);
-      const displayTitle = prefix === "intro" ? introHeadings[clean] ?? headingText : headingText;
+      const headings = prefix === "intro" ? introHeadings : prefix.startsWith("shlokas-") ? verseSectionHeadings : {};
+      const displayTitle = headings[clean] ?? headingText;
       if (heading[1].length <= 3) nav.push({ id, title: displayTitle === headingText ? clean : displayTitle });
       out.push(`<h${level} id="${id}">${inline(displayTitle)}</h${level}>`);
       i++;
