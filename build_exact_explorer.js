@@ -528,7 +528,8 @@ function markdownToHtml(markdown, prefix) {
         skandhaStops.push({ id, number, topic, position: out.length });
         out.push(`<h3 id="${id}" class="skandha-stop"><span>${inline(number)}</span> ${inline(topic)}</h3>`);
       } else {
-        out.push(`<h${level} id="${id}">${inline(displayTitle)}</h${level}>`);
+        const introClass = prefix === "intro" ? ' class="intro-heading"' : "";
+        out.push(`<h${level} id="${id}"${introClass}>${inline(displayTitle)}</h${level}>`);
       }
       i++;
       continue;
@@ -598,7 +599,14 @@ function markdownToHtml(markdown, prefix) {
       paragraph.push(lines[i].trim());
       i++;
     }
-    out.push(`<p>${inline(paragraph.join("\n")).replace(/\n/g, "<br>")}</p>`);
+    let paragraphClass = "";
+    if (prefix === "intro") {
+      if (out.length === 0) paragraphClass = ' class="intro-lead"';
+      else if (line.startsWith("শ্রীমদ্ভাগবতে **১২টি স্কন্ধ**")) paragraphClass = ' class="intro-note intro-count"';
+      else if (line.startsWith("**আমার জীবন সীমিত")) paragraphClass = ' class="intro-note intro-question"';
+      else if (line.startsWith("**“স বৈ পুংসাং")) paragraphClass = ' class="intro-verse"';
+    }
+    out.push(`<p${paragraphClass}>${inline(paragraph.join("\n")).replace(/\n/g, "<br>")}</p>`);
   }
 
   if (skandhaStops.length) addSkandhaNavigation(out, skandhaStops);
@@ -709,6 +717,36 @@ const html = `<!DOCTYPE html>
 @media print{@page{margin:18mm 16mm}body{background:#fff!important;color:#000;font-size:11pt}.skip-link,.tabs,.side{display:none!important}.hero{padding:0 0 8mm;border:0;background:#fff}.eyebrow{font-size:9pt}.hero h1{font-size:26pt}.page{display:none!important}.page.active{display:block!important;max-width:none}.page.active main{padding:0;background:#fff}.content{max-width:none}.content h2,.content h3,.content h4{color:#000;break-after:avoid}.content p,.content li,.content td{color:#111}.content blockquote,.diagram-wrap,.editorial-map,.table-wrap,table,tr{break-inside:avoid;box-shadow:none}.content blockquote{border:1px solid #aaa;color:#111;background:#fff}.diagram-wrap,.editorial-map,.table-wrap{overflow:visible;border-color:#aaa;background:#fff}.diagram{min-width:0;white-space:pre-wrap;color:#111;background:#fff}.diagram-source{display:none}.map-node,.branch-card{background:#fff}table{min-width:0;font-size:9pt}th{color:#000;background:#eee}footer{padding:8mm 0 0;background:#fff;color:#444}}
 </style>
 <style>.article-link{text-decoration:none}.article-link:hover .lesson-card-title{color:#8f2b0c}</style>
+<style>
+.content[data-content="0"]{max-width:50rem}
+.content .intro-heading{
+  margin:2.2rem 0 .85rem;padding:.5rem .8rem;
+  border-inline-start:3px solid #a8320c;background:#faf4ec;
+  color:#763014;font-size:clamp(1.05rem,1rem + .45vw,1.32rem);line-height:1.55;
+}
+.content .intro-heading#intro-section-97t35y{
+  border-inline-start-color:#637753;background:#f2f5ee;color:#3f5134;
+}
+.content .intro-heading#intro-section-1gvwds3{
+  border-inline-start-color:#497285;background:#edf3f5;color:#234b5e;
+}
+.content .intro-lead{
+  margin:0 0 1.25rem;padding:clamp(.9rem,2.5vw,1.35rem);
+  border-block:1px solid #e3d5c6;background:#fcfaf5;font-size:1.08rem;
+}
+.content .intro-note,.content .intro-verse{
+  margin:1rem 0;padding:.75rem clamp(.8rem,2.5vw,1.2rem);
+  border:1px solid #e4d7c8;border-radius:5px;background:#fcf8f1;
+}
+.content .intro-question{border-color:#cddce2;background:#f1f6f8;color:#234b5e}
+.content .intro-question strong,.content .intro-verse strong{color:inherit}
+.content .intro-verse{border:0;border-inline-start:2px solid #497285;background:#f7f9fa;color:#234b5e}
+.intro-verse em{font-size:.84rem;font-style:normal}
+@media print{
+  .content .intro-lead,.content .intro-note,.content .intro-verse{background:#fff;break-inside:avoid}
+  .content .intro-heading{background:#fff}
+}
+</style>
 <style>
 .content .skandha-stop{margin-top:2.4rem;padding-top:.8rem;border-top:1px solid var(--line)}
 .skandha-stop span{display:block;margin-bottom:.3rem;color:#8f2b0c;font-size:.78rem;font-weight:600}
