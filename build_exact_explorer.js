@@ -275,7 +275,7 @@ function chainDiagram(items, title, subtitle, code) {
 
 function renderDiagram(code) {
   if (code.includes("বিদুর ↔ মৈত্রেয়") && code.includes("শৌনকাদি ঋষি")) {
-    return `<figure class="editorial-map narration-map"><figcaption><strong>কথোপকথনের প্রধান স্থাপত্য</strong><span>কে কাকে কোন সংবাদ বলছেন</span></figcaption><div class="map-chain compact">${diagramNode("শৌনকাদি ঋষি", "প্রশ্নকারী") }<span class="map-arrow" aria-hidden="true">↓</span>${diagramNode("সূত গোস্বামী", "পুনর্বর্ণনাকারী") }<span class="map-arrow" aria-hidden="true">↓</span></div><div class="dialogue-pair"><div>${diagramNode("পরীক্ষিৎ মহারাজ", "প্রশ্নকারী", "listener")}</div><div class="relation-line"><span>প্রশ্ন</span><b aria-hidden="true">→</b></div><div>${diagramNode("শুকদেব গোস্বামী", "প্রধান বক্তা", "speaker")}</div></div><div class="nested-label">শুকদেবের কথনের ভিতরে</div><div class="branch-grid"><div class="branch-card"><b>বিদুর ↔ মৈত্রেয়</b><span>কপিল ↔ দেবহূতি</span><span>ধ্রুব ↔ নারদ</span><span>পৃথু প্রভৃতি</span></div><div class="branch-card"><b>অজামিল</b><span>যমদূত ↔ বিষ্ণুদূত</span></div><div class="branch-card"><b>প্রহ্লাদ ↔ হিরণ্যকশিপু</b></div><div class="branch-card divine"><b>কৃষ্ণ ↔ গোপীগণ</b><span>উদ্ধব ↔ গোপীগণ</span></div><div class="branch-card divine"><b>কৃষ্ণ ↔ উদ্ধব</b><span>উদ্ধবগীতা</span></div></div><div class="map-legend"><span><i class="legend-terracotta"></i> কথনের প্রধান প্রবাহ</span><span><i class="legend-blue"></i> কৃষ্ণকেন্দ্রিক সংবাদ</span><span>↔ সরাসরি কথোপকথন</span></div>${sourceFallback(code)}</figure>`;
+    return `<figure class="editorial-map narration-map"><figcaption><strong>কথোপকথনের প্রধান স্থাপত্য</strong><span>কে কাকে কোন সংবাদ বলছেন</span></figcaption><button type="button" class="diagram-expand" data-open-diagram-viewer aria-haspopup="dialog" aria-controls="diagram-viewer">⛶ বড় করে দেখুন</button><div class="narration-map-preview" data-map-preview><div class="narration-map-canvas" data-map-canvas><div class="map-chain compact">${diagramNode("শৌনকাদি ঋষি", "প্রশ্নকারী") }<span class="map-arrow" aria-hidden="true">↓</span>${diagramNode("সূত গোস্বামী", "পুনর্বর্ণনাকারী") }<span class="map-arrow" aria-hidden="true">↓</span></div><div class="dialogue-pair"><div>${diagramNode("পরীক্ষিৎ মহারাজ", "প্রশ্নকারী", "listener")}</div><div class="relation-line"><span>প্রশ্ন</span><b aria-hidden="true">→</b></div><div>${diagramNode("শুকদেব গোস্বামী", "প্রধান বক্তা", "speaker")}</div></div><div class="nested-label">শুকদেবের কথনের ভিতরে</div><div class="branch-grid"><div class="branch-card"><b>বিদুর ↔ মৈত্রেয়</b><span>কপিল ↔ দেবহূতি</span><span>ধ্রুব ↔ নারদ</span><span>পৃথু প্রভৃতি</span></div><div class="branch-card"><b>অজামিল</b><span>যমদূত ↔ বিষ্ণুদূত</span></div><div class="branch-card"><b>প্রহ্লাদ ↔ হিরণ্যকশিপু</b></div><div class="branch-card divine"><b>কৃষ্ণ ↔ গোপীগণ</b><span>উদ্ধব ↔ গোপীগণ</span></div><div class="branch-card divine"><b>কৃষ্ণ ↔ উদ্ধব</b><span>উদ্ধবগীতা</span></div></div><div class="map-legend"><span><i class="legend-terracotta"></i> কথনের প্রধান প্রবাহ</span><span><i class="legend-blue"></i> কৃষ্ণকেন্দ্রিক সংবাদ</span><span>↔ সরাসরি কথোপকথন</span></div></div>${sourceFallback(code)}</figure>`;
   }
 
   if (code.startsWith("স্বায়ম্ভুব মনু + শতরূপা")) {
@@ -992,6 +992,53 @@ const html = `<!DOCTYPE html>
   #page-3 .content[data-content="3"] .editorial-map .branch-card{border:1px solid #e2ded6;border-left:2px solid #bc6a3f;border-top:1px solid #e2ded6;background:#fcfaf5}
   #page-3 .content[data-content="3"] .editorial-map .branch-card.divine{border-left-color:#245775;background:#f7f9fa}
 }
+/* কথন-কাঠামো মানচিত্র: মোবাইলে desktop-এর স্থানিক বিন্যাস scale করে দেখায় */
+.narration-map-preview{width:100%;min-width:0}
+.narration-map-canvas{width:100%;transform-origin:top left}
+.diagram-expand{display:none}
+.diagram-viewer{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#f8f6f1;color:#28221d}
+.diagram-viewer::backdrop{background:rgba(35,28,23,.55)}
+.diagram-viewer-shell{display:grid;grid-template-rows:auto minmax(0,1fr);width:100%;height:100%}
+.diagram-viewer-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid #ddd8ce;background:#fff}
+.diagram-viewer-title{margin:0;color:#8f2b0c;font-size:1rem;font-weight:600}
+.diagram-viewer-controls{display:flex;align-items:center;gap:6px}
+.diagram-viewer-controls button{min-width:42px;min-height:42px;padding:7px 10px;border:1px solid #d8d0c5;border-radius:4px;background:#fff;color:#713009;cursor:pointer;font:inherit}
+.diagram-viewer-controls button:hover{background:#f4efe7}
+.diagram-viewer-controls button:focus-visible,.diagram-expand:focus-visible{outline:3px solid #245775;outline-offset:2px}
+.diagram-viewer-viewport{position:relative;min-width:0;min-height:0;overflow:hidden;overscroll-behavior:contain;touch-action:none;background:#fcfaf5;cursor:grab}
+.diagram-viewer-viewport:active{cursor:grabbing}
+.diagram-viewer-stage{position:absolute;inset:0}
+.diagram-viewer-stage>.narration-map-canvas{position:absolute;top:0;left:0;transform-origin:top left}
+@media(max-width:700px){
+  .diagram-expand{display:flex;align-items:center;justify-content:center;width:max-content;min-height:40px;margin:0 auto 12px;padding:6px 11px;border:1px solid #d8cbb9;border-radius:3px;background:#fffdf8;color:#8f2b0c;font-size:.82rem;cursor:pointer}
+  .narration-map-preview{overflow:hidden}
+  .narration-map-canvas{width:720px}
+  .narration-map .map-node{width:auto;min-width:150px;margin:0}
+  .narration-map .map-chain .map-node{width:100%;max-width:360px}
+  .narration-map .dialogue-pair{grid-template-columns:minmax(170px,1fr) minmax(100px,150px) minmax(170px,1fr);gap:14px;width:100%;max-width:720px}
+  .narration-map .dialogue-pair>div{min-width:0}
+  .narration-map .dialogue-pair>div .map-node{width:100%;margin:0}
+  .narration-map .relation-line{width:auto;max-width:none;margin:0;flex-direction:row;transform:none}
+  .narration-map .relation-line:before,.narration-map .relation-line:after{width:auto;height:auto;flex:1;border:0;border-top:1px solid #b8704d}
+  .narration-map .relation-line span{padding:0 8px;background:transparent;font-size:.72rem}
+  .narration-map .relation-line b{font-size:1rem}
+  .narration-map .relation-line b:after{content:none}
+  .narration-map .nested-label{width:max-content;max-width:100%;margin:36px auto 22px;white-space:nowrap;text-align:center}
+  .narration-map .nested-label:before{height:36px}
+  .narration-map .branch-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .narration-map .branch-card{padding:15px 14px;border:0;border-top:2px solid #bc6a3f;background:#fff;text-align:center}
+  .narration-map .branch-card:nth-child(2n){border-top:2px solid #c79255;background:#fffdf8}
+  .narration-map .branch-card.divine{border-top:2px solid #245775;background:#f7f9fa}
+  .narration-map .branch-card:before{display:block}
+  .narration-map .branch-card b{font-size:.88rem}
+  .narration-map .branch-card span{display:block;margin-top:7px;font-size:.73rem}
+  .narration-map .map-legend{align-items:center;flex-direction:row;justify-content:center;gap:16px;margin-top:24px;font-size:.68rem}
+  .narration-map .map-arrow{height:31px;line-height:31px}
+  .diagram-viewer-toolbar{align-items:center;flex-wrap:wrap;padding:8px;gap:6px}
+  .diagram-viewer-title{flex:1 0 100%;text-align:center;font-size:.84rem}
+  .diagram-viewer-controls{justify-content:center;width:100%;gap:4px}
+  .diagram-viewer-controls button{min-width:38px;min-height:40px;padding:6px 8px;font-size:.82rem}
+}
 @media print{.skandha-links{display:none}}
 </style>
 </head>
@@ -1000,6 +1047,7 @@ const html = `<!DOCTYPE html>
 <header class="hero"><div class="eyebrow">শ্রবণ • কীর্তন • স্মরণ • ভক্তি</div><h1>শ্রীমদ্ভাগবত মহাপুরাণ</h1></header>
 <nav class="tabs" id="tabs" role="tablist" aria-label="প্রধান বিভাগ">${rendered.map((x,i)=>`<button class="tab ${i===0?"active":""}" id="tab-${i}" role="tab" aria-selected="${i===0}" aria-controls="page-${i}" tabindex="${i===0?0:-1}" data-tab="${i}">${x.title}</button>`).join("")}</nav>
 <div id="pages">${rendered.map((x,i)=>`<section class="page ${i===0?"active":""}" id="page-${i}" role="tabpanel" aria-labelledby="tab-${i}" ${i===0?"":"hidden"}><aside class="side" aria-label="এই বিভাগের সূচি">${x.storyModule?`<div data-story-skandha-nav><div class="side-title">১২ স্কন্ধ</div><nav class="story-side-nav" aria-label="স্কন্ধ নির্বাচন">${storyIntegration.skandhas.map((item,index)=>`<button type="button" class="${index===0?"active":""}" data-select-skandha="${item.number}" aria-pressed="${index===0}">${item.ordinal} স্কন্ধ</button>`).join("")}</nav></div>`:`<div class="desktop-toc"><div class="side-title">এই বিভাগের সূচি</div><input class="search" type="search" aria-label="এই বিভাগে খুঁজুন" placeholder="এই বিভাগে খুঁজুন…" data-search="${i}">${x.nav.map(n=>`<a href="#${n.id}">${n.title}</a>`).join("")}</div><details class="mobile-toc"><summary>এই বিভাগের সূচি</summary><div class="mobile-toc-links"><input class="search" type="search" aria-label="এই বিভাগে খুঁজুন" placeholder="এই বিভাগে খুঁজুন…" data-search="${i}">${x.nav.map(n=>`<a href="#${n.id}">${n.title}</a>`).join("")}</div></details>`}</aside><main class="main-content" id="main-${i}" tabindex="-1"><article class="content" data-content="${i}">${x.html}</article></main></section>`).join("")}</div>
+<dialog id="diagram-viewer" class="diagram-viewer" aria-labelledby="diagram-viewer-title" data-diagram-viewer><div class="diagram-viewer-shell"><header class="diagram-viewer-toolbar"><h2 id="diagram-viewer-title" class="diagram-viewer-title">কথোপকথনের প্রধান স্থাপত্য</h2><div class="diagram-viewer-controls"><button type="button" data-map-zoom-out aria-label="চিত্র ছোট করুন">−</button><button type="button" data-map-zoom-in aria-label="চিত্র বড় করুন">+</button><button type="button" data-map-fit>পুরো চিত্র</button><button type="button" data-map-close aria-label="চিত্র বন্ধ করুন">বন্ধ</button></div></header><div class="diagram-viewer-viewport" data-map-viewport tabindex="0" aria-label="চিত্র টেনে সরান বা দুই আঙুলে বড়-ছোট করুন"><div class="diagram-viewer-stage" data-map-stage></div></div></div></dialog>
 <footer>॥ ওঁ নমো ভগবতে বাসুদেবায় ॥<br>ঘটনার কালক্রম ও কথনের কালক্রম ইচ্ছাকৃতভাবে আলাদা রাখা হয়েছে।</footer>
 <script>
 const storyData=${JSON.stringify(storyIntegration).replace(/</g, "\\u003c")};
@@ -1023,7 +1071,7 @@ function activateTab(index,{focus=false,scrollTop=false}={}){
   skipLink.href='#main-'+index;
   if(focus)tabs[index].focus();
   if(scrollTop)window.scrollTo({top:document.querySelector('.tabs').offsetTop,behavior:'smooth'});
-  requestAnimationFrame(observeActivePage);
+  requestAnimationFrame(()=>{observeActivePage();updateNarrationPreview()});
 }
 
 function pageIndexFor(element){return pages.findIndex(page=>page.contains(element))}
@@ -1056,6 +1104,139 @@ tabs.forEach((button,i)=>{
     activateTab(next,{focus:true,scrollTop:true});
   });
 });
+
+const mapExpandButton=document.querySelector('[data-open-diagram-viewer]');
+const mapViewer=document.querySelector('[data-diagram-viewer]');
+const mapViewport=mapViewer?.querySelector('[data-map-viewport]');
+const mapStage=mapViewer?.querySelector('[data-map-stage]');
+const mapCanvas=document.querySelector('[data-map-canvas]');
+const mapPreview=document.querySelector('[data-map-preview]');
+let mapReturnMarker=null,mapReturnFocus=null,mapReturnScrollY=0,mapSavedCanvasStyle=null,mapSavedPreviewStyle=null;
+let mapZoom=1,mapFitZoom=1,mapPanX=0,mapPanY=0,mapPointers=new Map(),mapDragStart=null,mapPinchStart=null;
+
+function updateNarrationPreview(){
+  if(!mapCanvas||!mapPreview||mapViewer?.open)return;
+  if(window.matchMedia('(max-width:700px)').matches){
+    const naturalWidth=mapCanvas.offsetWidth||720;
+    const scale=Math.min(1,mapPreview.clientWidth/naturalWidth);
+    mapCanvas.style.transformOrigin='top left';
+    mapCanvas.style.transform='scale('+scale+')';
+    mapPreview.style.height=(mapCanvas.offsetHeight*scale)+'px';
+  }else{
+    mapCanvas.style.transform='';
+    mapCanvas.style.transformOrigin='';
+    mapPreview.style.height='';
+  }
+}
+
+function applyMapTransform(){
+  if(!mapCanvas)return;
+  mapCanvas.style.transformOrigin='top left';
+  mapCanvas.style.transform='translate('+mapPanX+'px,'+mapPanY+'px) scale('+mapZoom+')';
+}
+
+function fitNarrationMap(){
+  if(!mapViewport||!mapCanvas)return;
+  const width=mapCanvas.offsetWidth,height=mapCanvas.offsetHeight;
+  if(!width||!height)return;
+  mapFitZoom=Math.min(mapViewport.clientWidth/width,mapViewport.clientHeight/height,1);
+  mapZoom=mapFitZoom;
+  mapPanX=(mapViewport.clientWidth-width*mapZoom)/2;
+  mapPanY=(mapViewport.clientHeight-height*mapZoom)/2;
+  applyMapTransform();
+}
+
+function zoomNarrationMap(nextZoom,anchorX=mapViewport.clientWidth/2,anchorY=mapViewport.clientHeight/2){
+  const bounded=Math.max(mapFitZoom,Math.min(4,nextZoom));
+  const ratio=bounded/mapZoom;
+  mapPanX=anchorX-(anchorX-mapPanX)*ratio;
+  mapPanY=anchorY-(anchorY-mapPanY)*ratio;
+  mapZoom=bounded;
+  applyMapTransform();
+}
+
+if(mapExpandButton&&mapViewer&&mapViewport&&mapStage&&mapCanvas&&mapPreview){
+  const resizeObserver=new ResizeObserver(updateNarrationPreview);
+  resizeObserver.observe(mapPreview);
+  window.addEventListener('resize',()=>{
+    if(mapViewer.open)fitNarrationMap();
+    else updateNarrationPreview();
+  });
+  mapExpandButton.addEventListener('click',()=>{
+    updateNarrationPreview();
+    mapReturnFocus=mapExpandButton;
+    mapReturnScrollY=window.scrollY;
+    mapSavedCanvasStyle=mapCanvas.getAttribute('style');
+    mapSavedPreviewStyle=mapPreview.getAttribute('style');
+    mapReturnMarker=document.createComment('মানচিত্রের আগের অবস্থান');
+    mapCanvas.parentNode.insertBefore(mapReturnMarker,mapCanvas);
+    mapCanvas.style.width=mapCanvas.offsetWidth+'px';
+    mapCanvas.style.transform='none';
+    mapStage.append(mapCanvas);
+    mapViewer.showModal();
+    requestAnimationFrame(()=>{fitNarrationMap();mapViewer.querySelector('[data-map-close]').focus()});
+  });
+  mapViewer.querySelector('[data-map-close]').addEventListener('click',()=>mapViewer.close());
+  mapViewer.querySelector('[data-map-fit]').addEventListener('click',fitNarrationMap);
+  mapViewer.querySelector('[data-map-zoom-in]').addEventListener('click',()=>zoomNarrationMap(mapZoom*1.25));
+  mapViewer.querySelector('[data-map-zoom-out]').addEventListener('click',()=>zoomNarrationMap(mapZoom/1.25));
+  mapViewer.addEventListener('click',event=>{if(event.target===mapViewer)mapViewer.close()});
+  mapViewer.addEventListener('close',()=>{
+    if(mapReturnMarker?.parentNode)mapReturnMarker.parentNode.insertBefore(mapCanvas,mapReturnMarker);
+    mapReturnMarker?.remove();
+    if(mapSavedCanvasStyle===null)mapCanvas.removeAttribute('style');else mapCanvas.setAttribute('style',mapSavedCanvasStyle);
+    if(mapSavedPreviewStyle===null)mapPreview.removeAttribute('style');else mapPreview.setAttribute('style',mapSavedPreviewStyle);
+    mapPointers.clear();mapDragStart=null;mapPinchStart=null;
+    requestAnimationFrame(()=>{
+      updateNarrationPreview();
+      if(mapReturnFocus?.isConnected)mapReturnFocus.focus({preventScroll:true});
+      window.scrollTo(0,mapReturnScrollY);
+    });
+  });
+
+  function pointInMapViewport(event){
+    const rect=mapViewport.getBoundingClientRect();
+    return {x:event.clientX-rect.left,y:event.clientY-rect.top};
+  }
+  function beginMapPinch(){
+    const [first,second]=[...mapPointers.values()];
+    const middle={x:(first.x+second.x)/2,y:(first.y+second.y)/2};
+    mapPinchStart={distance:Math.max(1,Math.hypot(second.x-first.x,second.y-first.y)),zoom:mapZoom,worldX:(middle.x-mapPanX)/mapZoom,worldY:(middle.y-mapPanY)/mapZoom};
+  }
+  mapViewport.addEventListener('pointerdown',event=>{
+    event.preventDefault();
+    mapViewport.setPointerCapture(event.pointerId);
+    mapPointers.set(event.pointerId,pointInMapViewport(event));
+    if(mapPointers.size===1){const point=mapPointers.get(event.pointerId);mapDragStart={x:point.x,y:point.y,panX:mapPanX,panY:mapPanY}}
+    if(mapPointers.size===2)beginMapPinch();
+  });
+  mapViewport.addEventListener('pointermove',event=>{
+    if(!mapPointers.has(event.pointerId))return;
+    mapPointers.set(event.pointerId,pointInMapViewport(event));
+    if(mapPointers.size>=2&&mapPinchStart){
+      const [first,second]=[...mapPointers.values()];
+      const middle={x:(first.x+second.x)/2,y:(first.y+second.y)/2};
+      mapZoom=Math.max(mapFitZoom,Math.min(4,mapPinchStart.zoom*Math.hypot(second.x-first.x,second.y-first.y)/mapPinchStart.distance));
+      mapPanX=middle.x-mapPinchStart.worldX*mapZoom;
+      mapPanY=middle.y-mapPinchStart.worldY*mapZoom;
+      applyMapTransform();
+    }else if(mapPointers.size===1&&mapDragStart){
+      const point=mapPointers.get(event.pointerId);
+      mapPanX=mapDragStart.panX+point.x-mapDragStart.x;
+      mapPanY=mapDragStart.panY+point.y-mapDragStart.y;
+      applyMapTransform();
+    }
+  });
+  const endMapPointer=event=>{
+    mapPointers.delete(event.pointerId);
+    mapPinchStart=null;
+    mapDragStart=null;
+    if(mapPointers.size===1){const [id,point]=[...mapPointers.entries()][0];mapDragStart={id,x:point.x,y:point.y,panX:mapPanX,panY:mapPanY}}
+  };
+  mapViewport.addEventListener('pointerup',endMapPointer);
+  mapViewport.addEventListener('pointercancel',endMapPointer);
+  mapViewport.addEventListener('lostpointercapture',endMapPointer);
+}
 
 function setActiveToc(id){
   document.querySelectorAll('.side a').forEach(link=>link.classList.toggle('active',link.getAttribute('href')==='#'+id));
