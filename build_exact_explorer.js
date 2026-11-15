@@ -909,6 +909,42 @@ const html = `<!DOCTYPE html>
 .skandha-index a span{flex:none;font-size:.75rem;color:#65564b}
 .skandha-step{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.75rem;margin-block:1.1rem .4rem;font-size:.88rem}
 .skandha-step a:last-child{margin-inline-start:auto}
+/* চরিত্র ও সময়রেখা — জেড, উষ্ণ সোনালি ও কাগজ-সাদা রঙের পাঠবান্ধব প্যালেট */
+#page-3 .side-title,#page-3 .mobile-toc summary{color:#24635d}
+#page-3 .side a:hover,#page-3 .side a.active{color:#1b5b55;background:#edf5f1;border-left-color:#3a7c79}
+#page-3 .content[data-content="3"]{--timeline-jade:#24635d;--timeline-deep:#194e4a;--timeline-sage:#edf5f1;--timeline-pale:#fff6e3;--timeline-coral:#a94f36;--timeline-line:#d6e4dd;--timeline-ink:#29373b}
+#page-3 .content[data-content="3"] h2{padding:.38rem .72rem;border-inline-start:3px solid #d99a3b;border-radius:0 5px 5px 0;background:linear-gradient(90deg,#edf5f1 0,#f7faf8 58%,#fff 100%);color:var(--timeline-deep)}
+#page-3 .content[data-content="3"] h3{color:var(--timeline-jade)}
+#page-3 .content[data-content="3"] h4{color:var(--timeline-coral)}
+#page-3 .content[data-content="3"] p,#page-3 .content[data-content="3"] li{color:var(--timeline-ink)}
+#page-3 .content[data-content="3"] strong{color:#1c4d50}
+#page-3 .content[data-content="3"] blockquote{border-color:#e8d4aa;background:var(--timeline-pale);color:#34474a}
+#page-3 .content[data-content="3"] blockquote:before{color:#d99a3b}
+#page-3 .content[data-content="3"] .editorial-map{border:1px solid var(--timeline-line);border-radius:12px;background:linear-gradient(145deg,#f3f8f5 0%,#fff 54%,#fff8eb 100%);box-shadow:0 8px 24px rgba(31,78,72,.07)}
+#page-3 .content[data-content="3"] .editorial-map figcaption strong{color:var(--timeline-deep)}
+#page-3 .content[data-content="3"] .editorial-map figcaption span{color:#5f706c}
+#page-3 .content[data-content="3"] .map-node{border:1px solid #d9e7e0;border-bottom:2px solid #75a99b;border-radius:8px;background:#fff;box-shadow:0 3px 9px rgba(31,78,72,.05)}
+#page-3 .content[data-content="3"] .map-node strong{color:#263b3b}
+#page-3 .content[data-content="3"] .map-node small{color:#5f706c}
+#page-3 .content[data-content="3"] .map-node.root-node{border-color:#ead9b6;border-bottom:3px solid #d99a3b;background:var(--timeline-pale)}
+#page-3 .content[data-content="3"] .map-node.divine{border-color:#c9dfd9;border-bottom-color:#3a7c79;background:#eaf4f1}
+#page-3 .content[data-content="3"] .map-node.divine strong{color:#205f59}
+#page-3 .content[data-content="3"] .map-arrow{color:#bd7830}
+#page-3 .content[data-content="3"] .branch-card{border:1px solid #dce8e1;border-top:2px solid #75a99b;border-radius:8px;background:#fff}
+#page-3 .content[data-content="3"] .branch-card:nth-child(2n){border-top-color:#d99a3b;background:#fffaf0}
+#page-3 .content[data-content="3"] .branch-card.divine{border-top-color:#3a7c79;background:#edf5f1}
+#page-3 .content[data-content="3"] .nested-label{border-radius:999px;background:#edf5f1;color:#24635d}
+#page-3 .content[data-content="3"] .map-note{color:#435a56!important}
+#page-3 .content[data-content="3"] .table-wrap{border-color:#d6e4dd;border-radius:10px;box-shadow:0 6px 18px rgba(31,78,72,.06)}
+#page-3 .content[data-content="3"] table{background:#fff}
+#page-3 .content[data-content="3"] th{color:#fff;background:linear-gradient(110deg,#24635d,#3a7c79);border-color:#4d8980}
+#page-3 .content[data-content="3"] td{color:#29373b;border-color:#e2ebe5}
+#page-3 .content[data-content="3"] tbody tr:nth-child(even){background:#f3f8f5}
+#page-3 .content[data-content="3"] tbody tr:hover{background:#fff6e3}
+#page-3 .content[data-content="3"] .diagram-source{border-color:#d6e4dd}
+#page-3 .content[data-content="3"] .diagram-source summary{color:#24635d}
+@media(max-width:700px){#page-3 .content[data-content="3"] h2{padding:.32rem .55rem}#page-3 .content[data-content="3"] .editorial-map{box-shadow:0 4px 14px rgba(31,78,72,.06)}}
+@media print{#page-3 .content[data-content="3"] h2,#page-3 .content[data-content="3"] .editorial-map,#page-3 .content[data-content="3"] .branch-card,#page-3 .content[data-content="3"] tbody tr:nth-child(even){background:#fff;box-shadow:none}}
 @media print{.skandha-links{display:none}}
 </style>
 </head>
