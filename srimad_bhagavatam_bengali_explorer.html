@@ -159,9 +159,10 @@
   #page-3 .content[data-content="3"] .editorial-map .branch-card{border:1px solid #e2ded6;border-left:2px solid #bc6a3f;border-top:1px solid #e2ded6;background:#fcfaf5}
   #page-3 .content[data-content="3"] .editorial-map .branch-card.divine{border-left-color:#245775;background:#f7f9fa}
 }
-/* কথন-কাঠামো মানচিত্র: মোবাইলে desktop-এর স্থানিক বিন্যাস scale করে দেখায় */
-.narration-map-preview{width:100%;min-width:0}
-.narration-map-canvas{width:100%;transform-origin:top left}
+/* স্থানিক মানচিত্র: মোবাইলে desktop বিন্যাস fit করে দেখায় */
+.diagram-preview{width:100%;min-width:0}
+.diagram-canvas{width:100%;transform-origin:top left}
+.diagram-canvas.family-map{display:flex;flex-direction:column;align-items:center}
 .diagram-expand{display:none}
 .diagram-viewer{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#f8f6f1;color:#28221d}
 .diagram-viewer::backdrop{background:rgba(35,28,23,.55)}
@@ -175,32 +176,51 @@
 .diagram-viewer-viewport{position:relative;min-width:0;min-height:0;overflow:hidden;overscroll-behavior:contain;touch-action:none;background:#fcfaf5;cursor:grab}
 .diagram-viewer-viewport:active{cursor:grabbing}
 .diagram-viewer-stage{position:absolute;inset:0}
-.diagram-viewer-stage>.narration-map-canvas{position:absolute;top:0;left:0;transform-origin:top left}
+.diagram-viewer-stage>.diagram-canvas{position:absolute;top:0;left:0;transform-origin:top left}
 @media(max-width:700px){
   .diagram-expand{display:flex;align-items:center;justify-content:center;width:max-content;min-height:40px;margin:0 auto 12px;padding:6px 11px;border:1px solid #d8cbb9;border-radius:3px;background:#fffdf8;color:#8f2b0c;font-size:.82rem;cursor:pointer}
-  .narration-map-preview{overflow:hidden}
-  .narration-map-canvas{width:720px}
-  .narration-map .map-node{width:auto;min-width:150px;margin:0}
-  .narration-map .map-chain .map-node{width:100%;max-width:360px}
-  .narration-map .dialogue-pair{grid-template-columns:minmax(170px,1fr) minmax(100px,150px) minmax(170px,1fr);gap:14px;width:100%;max-width:720px}
-  .narration-map .dialogue-pair>div{min-width:0}
-  .narration-map .dialogue-pair>div .map-node{width:100%;margin:0}
-  .narration-map .relation-line{width:auto;max-width:none;margin:0;flex-direction:row;transform:none}
-  .narration-map .relation-line:before,.narration-map .relation-line:after{width:auto;height:auto;flex:1;border:0;border-top:1px solid #b8704d}
-  .narration-map .relation-line span{padding:0 8px;background:transparent;font-size:.72rem}
-  .narration-map .relation-line b{font-size:1rem}
-  .narration-map .relation-line b:after{content:none}
-  .narration-map .nested-label{width:max-content;max-width:100%;margin:36px auto 22px;white-space:nowrap;text-align:center}
-  .narration-map .nested-label:before{height:36px}
-  .narration-map .branch-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-  .narration-map .branch-card{padding:15px 14px;border:0;border-top:2px solid #bc6a3f;background:#fff;text-align:center}
-  .narration-map .branch-card:nth-child(2n){border-top:2px solid #c79255;background:#fffdf8}
-  .narration-map .branch-card.divine{border-top:2px solid #245775;background:#f7f9fa}
-  .narration-map .branch-card:before{display:block}
-  .narration-map .branch-card b{font-size:.88rem}
-  .narration-map .branch-card span{display:block;margin-top:7px;font-size:.73rem}
-  .narration-map .map-legend{align-items:center;flex-direction:row;justify-content:center;gap:16px;margin-top:24px;font-size:.68rem}
-  .narration-map .map-arrow{height:31px;line-height:31px}
+  .diagram-preview{overflow:hidden}
+  .diagram-canvas{width:720px}
+  .diagram-canvas .map-node{width:auto;min-width:150px;margin:0}
+  .diagram-canvas .map-chain .map-node{width:100%;max-width:360px}
+  .diagram-canvas .dialogue-pair{grid-template-columns:minmax(170px,1fr) minmax(100px,150px) minmax(170px,1fr);gap:14px;width:100%;max-width:720px;margin-inline:auto}
+  .diagram-canvas .dialogue-pair>div{min-width:0}
+  .diagram-canvas .dialogue-pair>div .map-node{width:100%;margin:0}
+  .diagram-canvas .dialogue-pair.siblings{grid-template-columns:repeat(2,minmax(180px,1fr));gap:26px}
+  .diagram-canvas .relation-line{width:auto;max-width:none;margin:0;flex-direction:row;transform:none}
+  .diagram-canvas .relation-line:before,.diagram-canvas .relation-line:after{width:auto;height:auto;flex:1;border:0;border-top:1px solid #b8704d}
+  .diagram-canvas .relation-line span{padding:0 8px;background:transparent;font-size:.72rem}
+  .diagram-canvas .relation-line b{font-size:1rem}
+  .diagram-canvas .relation-line b:after{content:none}
+  .diagram-canvas .nested-label{width:max-content;max-width:100%;margin:36px auto 22px;white-space:nowrap;text-align:center}
+  .diagram-canvas .nested-label:before{height:36px}
+  .diagram-canvas .branch-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .diagram-canvas .branch-card{padding:15px 14px;border:0;border-top:2px solid #bc6a3f;background:#fff;text-align:center}
+  .diagram-canvas .branch-card:nth-child(2n){border-top:2px solid #c79255;background:#fffdf8}
+  .diagram-canvas .branch-card.divine{border-top:2px solid #245775;background:#f7f9fa}
+  .diagram-canvas .branch-card:before{display:block}
+  .diagram-canvas .branch-card b{font-size:.88rem}
+  .diagram-canvas .branch-card span{display:block;margin:7px 0 0;font-size:.73rem}
+  .diagram-canvas .map-legend{align-items:center;flex-direction:row;justify-content:center;gap:16px;margin-top:24px;font-size:.68rem}
+  .diagram-canvas .map-arrow{height:31px;line-height:31px}
+  .diagram-canvas.family-map{align-items:center;justify-content:flex-start}
+  .diagram-canvas.family-map>.map-node{align-self:center}
+  .diagram-canvas .family-split,.diagram-canvas .family-split.three{grid-template-columns:repeat(2,minmax(190px,1fr));width:min(680px,100%);gap:80px;margin-top:42px;padding-top:24px}
+  .diagram-canvas .family-split:before{content:"";position:absolute;left:25%;right:25%;top:0;display:block;width:auto;height:auto;border-top:1px solid #bca98f;border-left:0;text-align:initial;color:inherit;line-height:normal}
+  .diagram-canvas .family-split:after{content:"";position:absolute;left:50%;top:-42px;display:block;height:42px;border-left:1px solid #bca98f}
+  .diagram-canvas .family-branch{min-width:0;align-items:center;padding:0;border:0}
+  .diagram-canvas .family-branch:before{display:block;top:-24px;height:24px;border-left:1px solid #bca98f}
+  .diagram-canvas .family-branch>.map-node{width:auto;max-width:none}
+  .diagram-canvas .family-split.three{grid-template-columns:repeat(3,minmax(140px,1fr));gap:25px}
+  .diagram-canvas .family-split.three:before{left:16.66%;right:16.66%}
+  .diagram-canvas .siblings{margin-top:0}
+  .diagram-canvas .cosmos-level{display:flex;justify-content:center;align-items:center}
+  .diagram-canvas .cosmos-level.level-two{flex-direction:row;gap:0}
+  .diagram-canvas .level-three{grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin-top:30px;padding-top:25px}
+  .diagram-canvas .level-three:before{content:"";position:absolute;left:16.66%;right:16.66%;top:0;display:block;width:auto;height:auto;border-top:1px solid #bca98f;border-left:0;text-align:initial;color:inherit;line-height:normal}
+  .diagram-canvas .level-three>div{min-width:0;padding:0;border:0}
+  .diagram-canvas .level-three>div:before{display:block;left:50%;bottom:100%;height:25px;border-left:1px solid #bca98f}
+  .diagram-canvas .map-note{max-width:680px;margin:28px auto 0!important}
   .diagram-viewer-toolbar{align-items:center;flex-wrap:wrap;padding:8px;gap:6px}
   .diagram-viewer-title{flex:1 0 100%;text-align:center;font-size:.84rem}
   .diagram-viewer-controls{justify-content:center;width:100%;gap:4px}
@@ -262,7 +282,7 @@
 <h2 id="conversations-section-1vyn0vv">শ্রীমদ্ভাগবতের কথোপকথন</h2>
 <nav class="skandha-links skandha-index" aria-label="স্কন্ধ ধরে পড়ুন"><p>স্কন্ধ ধরে পড়ুন</p><ul><li><a href="#conversations-section-evoio1"><span>স্কন্ধ ১</span>পরীক্ষিতের প্রশ্ন ও ভাগবতের সূচনা</a></li><li><a href="#conversations-section-1w06e4p"><span>স্কন্ধ ২</span>শ্রবণ, কীর্তন ও স্মরণ</a></li><li><a href="#conversations-section-136tyba"><span>স্কন্ধ ৩</span>বিদুরের জিজ্ঞাসা</a></li><li><a href="#conversations-section-edvlzd"><span>স্কন্ধ ৪</span>ধ্রুবের সাধনা ও পুরঞ্জনের উপাখ্যান</a></li><li><a href="#conversations-section-oerwyt"><span>স্কন্ধ ৫</span>ঋষভদেবের উপদেশে মানবজীবনের উদ্দেশ্য</a></li><li><a href="#conversations-section-xt322p"><span>স্কন্ধ ৬</span>অজামিল ও হরিনামের মাহাত্ম্য</a></li><li><a href="#conversations-section-96tn25"><span>স্কন্ধ ৭</span>প্রহ্লাদের ভক্তিশিক্ষা</a></li><li><a href="#conversations-section-ytf62n"><span>স্কন্ধ ৮</span>গজেন্দ্রের আর্তনাদ</a></li><li><a href="#conversations-section-1i3hxlj"><span>স্কন্ধ ৯</span>রাজবংশের ধারায় যদুবংশ</a></li><li><a href="#conversations-section-mccaf2"><span>স্কন্ধ ১০</span>কৃষ্ণলীলা ও ব্রজপ্রেম</a></li><li><a href="#conversations-section-3546z9"><span>স্কন্ধ ১১</span>কৃষ্ণের বিদায় ও উদ্ধবগীতা</a></li><li><a href="#conversations-section-1uwzogz"><span>স্কন্ধ ১২</span>পরীক্ষিতের শ্রবণের সমাপ্তি</a></li></ul></nav>
 <h3 id="conversations-section-aopi3t">ভাগবতের কথন-কাঠামো</h3>
-<figure class="editorial-map narration-map"><figcaption><strong>কথোপকথনের প্রধান স্থাপত্য</strong><span>কে কাকে কোন সংবাদ বলছেন</span></figcaption><button type="button" class="diagram-expand" data-open-diagram-viewer aria-haspopup="dialog" aria-controls="diagram-viewer">⛶ বড় করে দেখুন</button><div class="narration-map-preview" data-map-preview><div class="narration-map-canvas" data-map-canvas><div class="map-chain compact"><div class="map-node "><strong>শৌনকাদি ঋষি</strong><small>প্রশ্নকারী</small></div><span class="map-arrow" aria-hidden="true">↓</span><div class="map-node "><strong>সূত গোস্বামী</strong><small>পুনর্বর্ণনাকারী</small></div><span class="map-arrow" aria-hidden="true">↓</span></div><div class="dialogue-pair"><div><div class="map-node listener"><strong>পরীক্ষিৎ মহারাজ</strong><small>প্রশ্নকারী</small></div></div><div class="relation-line"><span>প্রশ্ন</span><b aria-hidden="true">→</b></div><div><div class="map-node speaker"><strong>শুকদেব গোস্বামী</strong><small>প্রধান বক্তা</small></div></div></div><div class="nested-label">শুকদেবের কথনের ভিতরে</div><div class="branch-grid"><div class="branch-card"><b>বিদুর ↔ মৈত্রেয়</b><span>কপিল ↔ দেবহূতি</span><span>ধ্রুব ↔ নারদ</span><span>পৃথু প্রভৃতি</span></div><div class="branch-card"><b>অজামিল</b><span>যমদূত ↔ বিষ্ণুদূত</span></div><div class="branch-card"><b>প্রহ্লাদ ↔ হিরণ্যকশিপু</b></div><div class="branch-card divine"><b>কৃষ্ণ ↔ গোপীগণ</b><span>উদ্ধব ↔ গোপীগণ</span></div><div class="branch-card divine"><b>কৃষ্ণ ↔ উদ্ধব</b><span>উদ্ধবগীতা</span></div></div><div class="map-legend"><span><i class="legend-terracotta"></i> কথনের প্রধান প্রবাহ</span><span><i class="legend-blue"></i> কৃষ্ণকেন্দ্রিক সংবাদ</span><span>↔ সরাসরি কথোপকথন</span></div></div><details class="diagram-source"><summary>মূল পাঠ্যচিত্র দেখুন</summary><pre><code>শৌনকাদি ঋষি
+<figure class="editorial-map responsive-diagram"><figcaption><strong>কথোপকথনের প্রধান স্থাপত্য</strong><span>কে কাকে কোন সংবাদ বলছেন</span></figcaption><button type="button" class="diagram-expand" data-open-diagram-viewer aria-haspopup="dialog" aria-controls="diagram-viewer">⛶ বড় করে দেখুন</button><div class="diagram-preview" data-map-preview><div class="diagram-canvas narration-map" data-map-canvas><div class="map-chain compact"><div class="map-node "><strong>শৌনকাদি ঋষি</strong><small>প্রশ্নকারী</small></div><span class="map-arrow" aria-hidden="true">↓</span><div class="map-node "><strong>সূত গোস্বামী</strong><small>পুনর্বর্ণনাকারী</small></div><span class="map-arrow" aria-hidden="true">↓</span></div><div class="dialogue-pair"><div><div class="map-node listener"><strong>পরীক্ষিৎ মহারাজ</strong><small>প্রশ্নকারী</small></div></div><div class="relation-line"><span>প্রশ্ন</span><b aria-hidden="true">→</b></div><div><div class="map-node speaker"><strong>শুকদেব গোস্বামী</strong><small>প্রধান বক্তা</small></div></div></div><div class="nested-label">শুকদেবের কথনের ভিতরে</div><div class="branch-grid"><div class="branch-card"><b>বিদুর ↔ মৈত্রেয়</b><span>কপিল ↔ দেবহূতি</span><span>ধ্রুব ↔ নারদ</span><span>পৃথু প্রভৃতি</span></div><div class="branch-card"><b>অজামিল</b><span>যমদূত ↔ বিষ্ণুদূত</span></div><div class="branch-card"><b>প্রহ্লাদ ↔ হিরণ্যকশিপু</b></div><div class="branch-card divine"><b>কৃষ্ণ ↔ গোপীগণ</b><span>উদ্ধব ↔ গোপীগণ</span></div><div class="branch-card divine"><b>কৃষ্ণ ↔ উদ্ধব</b><span>উদ্ধবগীতা</span></div></div><div class="map-legend"><span><i class="legend-terracotta"></i> কথনের প্রধান প্রবাহ</span><span><i class="legend-blue"></i> কৃষ্ণকেন্দ্রিক সংবাদ</span><span>↔ সরাসরি কথোপকথন</span></div></div></div><details class="diagram-source"><summary>মূল পাঠ্যচিত্র দেখুন</summary><pre><code>শৌনকাদি ঋষি
       │
       ▼
   সূত গোস্বামী
@@ -411,7 +431,7 @@
 <h4 id="timeline-section-1wlqac4">স্বায়ম্ভুব মনু ও শতরূপা</h4>
 <p>তাঁদের সন্তানদের মধ্যে দেবহূতি ও উত্তানপাদ বিশেষভাবে উল্লেখযোগ্য; তাঁদের বংশধারায় যথাক্রমে কপিলদেব ও ধ্রুব মহারাজের কাহিনি এসেছে।</p>
 <p>মনুর এই দুই সন্তানের বংশধারা থেকে কপিলদেব ও ধ্রুব মহারাজের কাহিনি এগিয়েছে।</p>
-<figure class="editorial-map family-map"><figcaption><strong>স্বায়ম্ভুব মনুর দুই পারিবারিক শাখা</strong><span>কপিল ও ধ্রুব একই প্রাচীন পুরাণীয় জগতের অংশ</span></figcaption><div class="map-node root-node"><strong>স্বায়ম্ভুব মনু + শতরূপা</strong><small>মূল পরিবার</small></div><div class="family-split"><div class="family-branch"><div class="map-node "><strong>দেবহূতি</strong><small>কর্দম মুনির পত্নী</small></div><span class="map-arrow" aria-hidden="true">↓</span><div class="map-node divine"><strong>কপিলদেব</strong><small>পুত্র ও শিক্ষক</small></div></div><div class="family-branch"><div class="map-node "><strong>উত্তানপাদ</strong><small>মনুর পুত্র</small></div><span class="map-arrow" aria-hidden="true">↓</span><div class="map-node "><strong>ধ্রুব</strong><small>উত্তানপাদের পুত্র</small></div></div></div><details class="diagram-source"><summary>মূল পাঠ্যচিত্র দেখুন</summary><pre><code>স্বায়ম্ভুব মনু + শতরূপা
+<figure class="editorial-map responsive-diagram"><figcaption><strong>স্বায়ম্ভুব মনুর দুই পারিবারিক শাখা</strong><span>কপিল ও ধ্রুব একই প্রাচীন পুরাণীয় জগতের অংশ</span></figcaption><button type="button" class="diagram-expand" data-open-diagram-viewer aria-haspopup="dialog" aria-controls="diagram-viewer">⛶ বড় করে দেখুন</button><div class="diagram-preview" data-map-preview><div class="diagram-canvas family-map" data-map-canvas><div class="map-node root-node"><strong>স্বায়ম্ভুব মনু + শতরূপা</strong><small>মূল পরিবার</small></div><div class="family-split"><div class="family-branch"><div class="map-node "><strong>দেবহূতি</strong><small>কর্দম মুনির পত্নী</small></div><span class="map-arrow" aria-hidden="true">↓</span><div class="map-node divine"><strong>কপিলদেব</strong><small>পুত্র ও শিক্ষক</small></div></div><div class="family-branch"><div class="map-node "><strong>উত্তানপাদ</strong><small>মনুর পুত্র</small></div><span class="map-arrow" aria-hidden="true">↓</span><div class="map-node "><strong>ধ্রুব</strong><small>উত্তানপাদের পুত্র</small></div></div></div></div></div><details class="diagram-source"><summary>মূল পাঠ্যচিত্র দেখুন</summary><pre><code>স্বায়ম্ভুব মনু + শতরূপা
           │
      ┌────┴─────┐
      │          │
@@ -463,7 +483,7 @@
 <h2 id="timeline-section-1gqz8ci">প্রহ্লাদের কাহিনি ও পুরাণীয় কালক্রম</h2>
 <h4 id="timeline-section-h8orag">হিরণ্যকশিপু ও প্রহ্লাদ</h4>
 <p>ভাগবতের বর্ণনা অনুযায়ী, হিরণ্যকশিপু ও হিরণ্যাক্ষ জয়-বিজয়ের প্রথম অসুরজন্ম; তাই প্রহ্লাদের কাহিনি পুরাণীয় কালক্রমের প্রাচীন পর্বের সঙ্গে যুক্ত।</p>
-<figure class="editorial-map family-map"><figcaption><strong>জয়–বিজয়ের প্রথম অসুরজন্ম</strong><span>প্রহ্লাদ-কাহিনির পূর্বসূত্র</span></figcaption><div class="map-node root-node"><strong>জয়–বিজয়</strong><small>বৈকুণ্ঠের দ্বারপাল</small></div><span class="map-arrow" aria-hidden="true">↓</span><div class="dialogue-pair siblings"><div class="map-node "><strong>হিরণ্যাক্ষ</strong><small>বরাহদেবের দ্বারা বধ</small></div><div class="map-node "><strong>হিরণ্যকশিপু</strong><small>প্রহ্লাদের পিতা</small></div></div><span class="map-arrow" aria-hidden="true">↓</span><div class="map-node divine"><strong>প্রহ্লাদ</strong><small>নৃসিংহদেবের মহান ভক্ত</small></div><details class="diagram-source"><summary>মূল পাঠ্যচিত্র দেখুন</summary><pre><code>জয়-বিজয়
+<figure class="editorial-map responsive-diagram"><figcaption><strong>জয়–বিজয়ের প্রথম অসুরজন্ম</strong><span>প্রহ্লাদ-কাহিনির পূর্বসূত্র</span></figcaption><button type="button" class="diagram-expand" data-open-diagram-viewer aria-haspopup="dialog" aria-controls="diagram-viewer">⛶ বড় করে দেখুন</button><div class="diagram-preview" data-map-preview><div class="diagram-canvas family-map" data-map-canvas><div class="map-node root-node"><strong>জয়–বিজয়</strong><small>বৈকুণ্ঠের দ্বারপাল</small></div><span class="map-arrow" aria-hidden="true">↓</span><div class="dialogue-pair siblings"><div class="map-node "><strong>হিরণ্যাক্ষ</strong><small>বরাহদেবের দ্বারা বধ</small></div><div class="map-node "><strong>হিরণ্যকশিপু</strong><small>প্রহ্লাদের পিতা</small></div></div><span class="map-arrow" aria-hidden="true">↓</span><div class="map-node divine"><strong>প্রহ্লাদ</strong><small>নৃসিংহদেবের মহান ভক্ত</small></div></div></div><details class="diagram-source"><summary>মূল পাঠ্যচিত্র দেখুন</summary><pre><code>জয়-বিজয়
    ↓
 হিরণ্যাক্ষ + হিরণ্যকশিপু
                  │
@@ -478,7 +498,7 @@
 <p><strong>গজেন্দ্র-মোক্ষ</strong> একটি পূর্ববর্তী মন্বন্তরের প্রসঙ্গে আসে।</p>
 <p>তাই <strong>ধ্রুব → প্রহ্লাদ → গজেন্দ্র → কৃষ্ণ</strong>—এই ধারাকে সাধারণ ঐতিহাসিক কালক্রম বলে ধরে নেওয়া ঠিক হবে না।</p>
 <p>বরং পুরাণীয় সময়চক্রের স্তরগুলি এভাবে সাজানো:</p>
-<figure class="editorial-map cosmos-map"><figcaption><strong>পুরাণীয় সময়ের স্তর</strong><span>সব ঘটনা একই সরল মানবীয় সময়রেখায় নয়</span></figcaption><div class="cosmos-level level-one"><div class="map-node root-node"><strong>কল্প</strong><small>বৃহৎ সৃষ্টিচক্র</small></div></div><div class="cosmos-level level-two"><span class="map-arrow" aria-hidden="true">↓</span><div class="map-node "><strong>মন্বন্তর</strong><small>একজন মনুর শাসনপর্ব</small></div></div><div class="cosmos-level level-three"><div><div class="map-node "><strong>যুগচক্র</strong><small>সত্য–ত্রেতা–দ্বাপর–কলি</small></div></div><div><div class="map-node "><strong>রাজবংশ</strong><small>রাজর্ষি ও প্রজন্ম</small></div></div><div><div class="map-node divine"><strong>অবতার ও লীলা</strong><small>বিভিন্ন সময়পর্ব</small></div></div></div><p class="map-note">একটি কল্পের মধ্যে বহু মন্বন্তর; প্রতিটি মন্বন্তরের মধ্যে যুগচক্র, রাজবংশ ও অবতারলীলার প্রসঙ্গ আসে।</p><details class="diagram-source"><summary>মূল পাঠ্যচিত্র দেখুন</summary><pre><code>কল্প
+<figure class="editorial-map responsive-diagram"><figcaption><strong>পুরাণীয় সময়ের স্তর</strong><span>সব ঘটনা একই সরল মানবীয় সময়রেখায় নয়</span></figcaption><button type="button" class="diagram-expand" data-open-diagram-viewer aria-haspopup="dialog" aria-controls="diagram-viewer">⛶ বড় করে দেখুন</button><div class="diagram-preview" data-map-preview><div class="diagram-canvas cosmos-map" data-map-canvas><div class="cosmos-level level-one"><div class="map-node root-node"><strong>কল্প</strong><small>বৃহৎ সৃষ্টিচক্র</small></div></div><div class="cosmos-level level-two"><span class="map-arrow" aria-hidden="true">↓</span><div class="map-node "><strong>মন্বন্তর</strong><small>একজন মনুর শাসনপর্ব</small></div></div><div class="cosmos-level level-three"><div><div class="map-node "><strong>যুগচক্র</strong><small>সত্য–ত্রেতা–দ্বাপর–কলি</small></div></div><div><div class="map-node "><strong>রাজবংশ</strong><small>রাজর্ষি ও প্রজন্ম</small></div></div><div><div class="map-node divine"><strong>অবতার ও লীলা</strong><small>বিভিন্ন সময়পর্ব</small></div></div></div><p class="map-note">একটি কল্পের মধ্যে বহু মন্বন্তর; প্রতিটি মন্বন্তরের মধ্যে যুগচক্র, রাজবংশ ও অবতারলীলার প্রসঙ্গ আসে।</p></div></div><details class="diagram-source"><summary>মূল পাঠ্যচিত্র দেখুন</summary><pre><code>কল্প
  │
  ├── মন্বন্তর
  │     ├── যুগচক্র
@@ -525,7 +545,7 @@
 <hr>
 <h2 id="timeline-section-js00fy">মহাভারত, কৃষ্ণ ও পরীক্ষিতের যোগসূত্র</h2>
 <p>এই বংশধারাটি পরীক্ষিতের সঙ্গে পাণ্ডবদের সম্পর্ক স্পষ্ট করে:</p>
-<figure class="editorial-map family-map pandava-map"><figcaption><strong>পাণ্ডব থেকে পরীক্ষিৎ</strong><span>মহাভারত ও ভাগবতের পারিবারিক সেতু</span></figcaption><div class="map-node root-node"><strong>পাণ্ডু</strong><small>কুরুবংশ</small></div><div class="family-split three"><div><div class="map-node "><strong>যুধিষ্ঠির</strong><small>জ্যেষ্ঠ পাণ্ডব</small></div></div><div><div class="map-node "><strong>ভীম</strong><small>দ্বিতীয় পাণ্ডব</small></div></div><div class="family-branch"><div class="map-node speaker"><strong>অর্জুন</strong><small>পরীক্ষিতের পিতামহ</small></div><span class="map-arrow" aria-hidden="true">↓</span><div class="map-node "><strong>অভিমন্যু</strong><small>পরীক্ষিতের পিতা</small></div><span class="map-arrow" aria-hidden="true">↓</span><div class="map-node listener"><strong>পরীক্ষিৎ</strong><small>ভাগবতের প্রধান শ্রোতা</small></div><span class="map-arrow" aria-hidden="true">↓</span><div class="map-node "><strong>জনমেজয়</strong><small>পরীক্ষিতের পুত্র</small></div></div></div><details class="diagram-source"><summary>মূল পাঠ্যচিত্র দেখুন</summary><pre><code>পাণ্ডু
+<figure class="editorial-map responsive-diagram"><figcaption><strong>পাণ্ডব থেকে পরীক্ষিৎ</strong><span>মহাভারত ও ভাগবতের পারিবারিক সেতু</span></figcaption><button type="button" class="diagram-expand" data-open-diagram-viewer aria-haspopup="dialog" aria-controls="diagram-viewer">⛶ বড় করে দেখুন</button><div class="diagram-preview" data-map-preview><div class="diagram-canvas family-map pandava-map" data-map-canvas><div class="map-node root-node"><strong>পাণ্ডু</strong><small>কুরুবংশ</small></div><div class="family-split three"><div><div class="map-node "><strong>যুধিষ্ঠির</strong><small>জ্যেষ্ঠ পাণ্ডব</small></div></div><div><div class="map-node "><strong>ভীম</strong><small>দ্বিতীয় পাণ্ডব</small></div></div><div class="family-branch"><div class="map-node speaker"><strong>অর্জুন</strong><small>পরীক্ষিতের পিতামহ</small></div><span class="map-arrow" aria-hidden="true">↓</span><div class="map-node "><strong>অভিমন্যু</strong><small>পরীক্ষিতের পিতা</small></div><span class="map-arrow" aria-hidden="true">↓</span><div class="map-node listener"><strong>পরীক্ষিৎ</strong><small>ভাগবতের প্রধান শ্রোতা</small></div><span class="map-arrow" aria-hidden="true">↓</span><div class="map-node "><strong>জনমেজয়</strong><small>পরীক্ষিতের পুত্র</small></div></div></div></div></div><details class="diagram-source"><summary>মূল পাঠ্যচিত্র দেখুন</summary><pre><code>পাণ্ডু
  │
  ├── যুধিষ্ঠির
  ├── ভীম
@@ -637,7 +657,7 @@ function activateTab(index,{focus=false,scrollTop=false}={}){
   skipLink.href='#main-'+index;
   if(focus)tabs[index].focus();
   if(scrollTop)window.scrollTo({top:document.querySelector('.tabs').offsetTop,behavior:'smooth'});
-  requestAnimationFrame(()=>{observeActivePage();updateNarrationPreview()});
+  requestAnimationFrame(()=>{observeActivePage();updateDiagramPreviews()});
 }
 
 function pageIndexFor(element){return pages.findIndex(page=>page.contains(element))}
@@ -671,28 +691,32 @@ tabs.forEach((button,i)=>{
   });
 });
 
-const mapExpandButton=document.querySelector('[data-open-diagram-viewer]');
 const mapViewer=document.querySelector('[data-diagram-viewer]');
 const mapViewport=mapViewer?.querySelector('[data-map-viewport]');
 const mapStage=mapViewer?.querySelector('[data-map-stage]');
-const mapCanvas=document.querySelector('[data-map-canvas]');
-const mapPreview=document.querySelector('[data-map-preview]');
+const mapViewerTitle=mapViewer?.querySelector('.diagram-viewer-title');
+let mapCanvas=null,mapPreview=null,mapExpandButton=null;
 let mapReturnMarker=null,mapReturnFocus=null,mapReturnScrollY=0,mapSavedCanvasStyle=null,mapSavedPreviewStyle=null;
 let mapZoom=1,mapFitZoom=1,mapPanX=0,mapPanY=0,mapPointers=new Map(),mapDragStart=null,mapPinchStart=null;
 
-function updateNarrationPreview(){
-  if(!mapCanvas||!mapPreview||mapViewer?.open)return;
-  if(window.matchMedia('(max-width:700px)').matches){
-    const naturalWidth=mapCanvas.offsetWidth||720;
-    const scale=Math.min(1,mapPreview.clientWidth/naturalWidth);
-    mapCanvas.style.transformOrigin='top left';
-    mapCanvas.style.transform='scale('+scale+')';
-    mapPreview.style.height=(mapCanvas.offsetHeight*scale)+'px';
-  }else{
-    mapCanvas.style.transform='';
-    mapCanvas.style.transformOrigin='';
-    mapPreview.style.height='';
-  }
+function updateDiagramPreviews(){
+  if(mapViewer?.open)return;
+  const compact=window.matchMedia('(max-width:700px)').matches;
+  document.querySelectorAll('[data-map-canvas]').forEach(canvas=>{
+    const preview=canvas.closest('[data-map-preview]');
+    if(!preview)return;
+    if(compact){
+      const naturalWidth=canvas.offsetWidth||720;
+      const scale=Math.min(1,preview.clientWidth/naturalWidth);
+      canvas.style.transformOrigin='top left';
+      canvas.style.transform='scale('+scale+')';
+      preview.style.height=(canvas.offsetHeight*scale)+'px';
+    }else{
+      canvas.style.transform='';
+      canvas.style.transformOrigin='';
+      preview.style.height='';
+    }
+  });
 }
 
 function applyMapTransform(){
@@ -721,24 +745,31 @@ function zoomNarrationMap(nextZoom,anchorX=mapViewport.clientWidth/2,anchorY=map
   applyMapTransform();
 }
 
-if(mapExpandButton&&mapViewer&&mapViewport&&mapStage&&mapCanvas&&mapPreview){
-  const resizeObserver=new ResizeObserver(updateNarrationPreview);
-  resizeObserver.observe(mapPreview);
+if(mapViewer&&mapViewport&&mapStage){
+  const resizeObserver=new ResizeObserver(updateDiagramPreviews);
+  document.querySelectorAll('[data-map-preview]').forEach(preview=>resizeObserver.observe(preview));
   window.addEventListener('resize',()=>{
     if(mapViewer.open)fitNarrationMap();
-    else updateNarrationPreview();
+    else updateDiagramPreviews();
   });
-  mapExpandButton.addEventListener('click',()=>{
-    updateNarrationPreview();
-    mapReturnFocus=mapExpandButton;
+  document.addEventListener('click',event=>{
+    const button=event.target.closest('[data-open-diagram-viewer]');
+    if(!button)return;
+    mapExpandButton=button;
+    const figure=button.closest('.responsive-diagram');
+    mapCanvas=figure?.querySelector('[data-map-canvas]');
+    mapPreview=figure?.querySelector('[data-map-preview]');
+    if(!mapCanvas||!mapPreview)return;
+    updateDiagramPreviews();
+    mapReturnFocus=button;
     mapReturnScrollY=window.scrollY;
     mapSavedCanvasStyle=mapCanvas.getAttribute('style');
     mapSavedPreviewStyle=mapPreview.getAttribute('style');
+    if(mapViewerTitle)mapViewerTitle.textContent=figure.querySelector('figcaption strong')?.textContent||'চিত্র দেখুন';
     mapReturnMarker=document.createComment('মানচিত্রের আগের অবস্থান');
     mapCanvas.parentNode.insertBefore(mapReturnMarker,mapCanvas);
     mapCanvas.style.width=mapCanvas.offsetWidth+'px';
     mapCanvas.style.transform='none';
-    mapStage.classList.add('narration-map');
     mapStage.append(mapCanvas);
     mapViewer.showModal();
     requestAnimationFrame(()=>{fitNarrationMap();mapViewer.querySelector('[data-map-close]').focus()});
@@ -749,14 +780,14 @@ if(mapExpandButton&&mapViewer&&mapViewport&&mapStage&&mapCanvas&&mapPreview){
   mapViewer.querySelector('[data-map-zoom-out]').addEventListener('click',()=>zoomNarrationMap(mapZoom/1.25));
   mapViewer.addEventListener('click',event=>{if(event.target===mapViewer)mapViewer.close()});
   mapViewer.addEventListener('close',()=>{
+    if(!mapCanvas)return;
     if(mapReturnMarker?.parentNode)mapReturnMarker.parentNode.insertBefore(mapCanvas,mapReturnMarker);
     mapReturnMarker?.remove();
-    mapStage.classList.remove('narration-map');
     if(mapSavedCanvasStyle===null)mapCanvas.removeAttribute('style');else mapCanvas.setAttribute('style',mapSavedCanvasStyle);
     if(mapSavedPreviewStyle===null)mapPreview.removeAttribute('style');else mapPreview.setAttribute('style',mapSavedPreviewStyle);
     mapPointers.clear();mapDragStart=null;mapPinchStart=null;
     requestAnimationFrame(()=>{
-      updateNarrationPreview();
+      updateDiagramPreviews();
       if(mapReturnFocus?.isConnected)mapReturnFocus.focus({preventScroll:true});
       window.scrollTo(0,mapReturnScrollY);
     });
