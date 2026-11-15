@@ -269,13 +269,24 @@ function sourceFallback(code) {
   return `<details class="diagram-source"><summary>মূল পাঠ্যচিত্র দেখুন</summary><pre><code>${escapeHtml(code)}</code></pre></details>`;
 }
 
+function responsiveDiagram(markup) {
+  const match = markup.match(/^<figure class="editorial-map ([^"]+)">([\s\S]*)<\/figure>$/);
+  if (!match || !/(?:narration-map|family-map|cosmos-map)/.test(match[1])) return markup;
+  const captionEnd = match[2].indexOf("</figcaption>") + "</figcaption>".length;
+  const body = match[2].slice(captionEnd);
+  const sourceStart = body.lastIndexOf('<details class="diagram-source">');
+  const drawing = sourceStart < 0 ? body : body.slice(0, sourceStart);
+  const source = sourceStart < 0 ? "" : body.slice(sourceStart);
+  return `<figure class="editorial-map responsive-diagram"><figcaption>${match[2].slice(0, captionEnd).replace(/^<figcaption>|<\/figcaption>$/g, "")}</figcaption><button type="button" class="diagram-expand" data-open-diagram-viewer aria-haspopup="dialog" aria-controls="diagram-viewer">⛶ বড় করে দেখুন</button><div class="diagram-preview" data-map-preview><div class="diagram-canvas ${match[1]}" data-map-canvas>${drawing}</div></div>${source}</figure>`;
+}
+
 function chainDiagram(items, title, subtitle, code) {
   return `<figure class="editorial-map chain-map"><figcaption><strong>${title}</strong><span>${subtitle}</span></figcaption><div class="map-chain">${items.map((item, i) => `${diagramNode(item[0], item[1] || "", item[2] || "")}${i < items.length - 1 ? '<span class="map-arrow" aria-hidden="true">↓</span>' : ""}`).join("")}</div>${sourceFallback(code)}</figure>`;
 }
 
 function renderDiagram(code) {
   if (code.includes("বিদুর ↔ মৈত্রেয়") && code.includes("শৌনকাদি ঋষি")) {
-    return `<figure class="editorial-map narration-map"><figcaption><strong>কথোপকথনের প্রধান স্থাপত্য</strong><span>কে কাকে কোন সংবাদ বলছেন</span></figcaption><button type="button" class="diagram-expand" data-open-diagram-viewer aria-haspopup="dialog" aria-controls="diagram-viewer">⛶ বড় করে দেখুন</button><div class="narration-map-preview" data-map-preview><div class="narration-map-canvas" data-map-canvas><div class="map-chain compact">${diagramNode("শৌনকাদি ঋষি", "প্রশ্নকারী") }<span class="map-arrow" aria-hidden="true">↓</span>${diagramNode("সূত গোস্বামী", "পুনর্বর্ণনাকারী") }<span class="map-arrow" aria-hidden="true">↓</span></div><div class="dialogue-pair"><div>${diagramNode("পরীক্ষিৎ মহারাজ", "প্রশ্নকারী", "listener")}</div><div class="relation-line"><span>প্রশ্ন</span><b aria-hidden="true">→</b></div><div>${diagramNode("শুকদেব গোস্বামী", "প্রধান বক্তা", "speaker")}</div></div><div class="nested-label">শুকদেবের কথনের ভিতরে</div><div class="branch-grid"><div class="branch-card"><b>বিদুর ↔ মৈত্রেয়</b><span>কপিল ↔ দেবহূতি</span><span>ধ্রুব ↔ নারদ</span><span>পৃথু প্রভৃতি</span></div><div class="branch-card"><b>অজামিল</b><span>যমদূত ↔ বিষ্ণুদূত</span></div><div class="branch-card"><b>প্রহ্লাদ ↔ হিরণ্যকশিপু</b></div><div class="branch-card divine"><b>কৃষ্ণ ↔ গোপীগণ</b><span>উদ্ধব ↔ গোপীগণ</span></div><div class="branch-card divine"><b>কৃষ্ণ ↔ উদ্ধব</b><span>উদ্ধবগীতা</span></div></div><div class="map-legend"><span><i class="legend-terracotta"></i> কথনের প্রধান প্রবাহ</span><span><i class="legend-blue"></i> কৃষ্ণকেন্দ্রিক সংবাদ</span><span>↔ সরাসরি কথোপকথন</span></div></div>${sourceFallback(code)}</figure>`;
+    return `<figure class="editorial-map narration-map"><figcaption><strong>কথোপকথনের প্রধান স্থাপত্য</strong><span>কে কাকে কোন সংবাদ বলছেন</span></figcaption><div class="map-chain compact">${diagramNode("শৌনকাদি ঋষি", "প্রশ্নকারী") }<span class="map-arrow" aria-hidden="true">↓</span>${diagramNode("সূত গোস্বামী", "পুনর্বর্ণনাকারী") }<span class="map-arrow" aria-hidden="true">↓</span></div><div class="dialogue-pair"><div>${diagramNode("পরীক্ষিৎ মহারাজ", "প্রশ্নকারী", "listener")}</div><div class="relation-line"><span>প্রশ্ন</span><b aria-hidden="true">→</b></div><div>${diagramNode("শুকদেব গোস্বামী", "প্রধান বক্তা", "speaker")}</div></div><div class="nested-label">শুকদেবের কথনের ভিতরে</div><div class="branch-grid"><div class="branch-card"><b>বিদুর ↔ মৈত্রেয়</b><span>কপিল ↔ দেবহূতি</span><span>ধ্রুব ↔ নারদ</span><span>পৃথু প্রভৃতি</span></div><div class="branch-card"><b>অজামিল</b><span>যমদূত ↔ বিষ্ণুদূত</span></div><div class="branch-card"><b>প্রহ্লাদ ↔ হিরণ্যকশিপু</b></div><div class="branch-card divine"><b>কৃষ্ণ ↔ গোপীগণ</b><span>উদ্ধব ↔ গোপীগণ</span></div><div class="branch-card divine"><b>কৃষ্ণ ↔ উদ্ধব</b><span>উদ্ধবগীতা</span></div></div><div class="map-legend"><span><i class="legend-terracotta"></i> কথনের প্রধান প্রবাহ</span><span><i class="legend-blue"></i> কৃষ্ণকেন্দ্রিক সংবাদ</span><span>↔ সরাসরি কথোপকথন</span></div>${sourceFallback(code)}</figure>`;
   }
 
   if (code.startsWith("স্বায়ম্ভুব মনু + শতরূপা")) {
@@ -653,7 +664,7 @@ function markdownToHtml(markdown, prefix) {
       while (i < lines.length && !lines[i].startsWith("```")) code.push(lines[i++]);
       i++;
       const isDiagram = language === "text";
-      out.push(isDiagram ? renderDiagram(code.join("\n")) : `<div class="diagram-wrap prompt-wrap"><div class="diagram-label">মূল প্রশ্ন বা বক্তব্য</div><pre class="diagram"><code>${escapeHtml(code.join("\n"))}</code></pre></div>`);
+      out.push(isDiagram ? responsiveDiagram(renderDiagram(code.join("\n"))) : `<div class="diagram-wrap prompt-wrap"><div class="diagram-label">মূল প্রশ্ন বা বক্তব্য</div><pre class="diagram"><code>${escapeHtml(code.join("\n"))}</code></pre></div>`);
       continue;
     }
 
@@ -992,9 +1003,10 @@ const html = `<!DOCTYPE html>
   #page-3 .content[data-content="3"] .editorial-map .branch-card{border:1px solid #e2ded6;border-left:2px solid #bc6a3f;border-top:1px solid #e2ded6;background:#fcfaf5}
   #page-3 .content[data-content="3"] .editorial-map .branch-card.divine{border-left-color:#245775;background:#f7f9fa}
 }
-/* কথন-কাঠামো মানচিত্র: মোবাইলে desktop-এর স্থানিক বিন্যাস scale করে দেখায় */
-.narration-map-preview{width:100%;min-width:0}
-.narration-map-canvas{width:100%;transform-origin:top left}
+/* স্থানিক মানচিত্র: মোবাইলে desktop বিন্যাস fit করে দেখায় */
+.diagram-preview{width:100%;min-width:0}
+.diagram-canvas{width:100%;transform-origin:top left}
+.diagram-canvas.family-map{display:flex;flex-direction:column;align-items:center}
 .diagram-expand{display:none}
 .diagram-viewer{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#f8f6f1;color:#28221d}
 .diagram-viewer::backdrop{background:rgba(35,28,23,.55)}
@@ -1008,32 +1020,51 @@ const html = `<!DOCTYPE html>
 .diagram-viewer-viewport{position:relative;min-width:0;min-height:0;overflow:hidden;overscroll-behavior:contain;touch-action:none;background:#fcfaf5;cursor:grab}
 .diagram-viewer-viewport:active{cursor:grabbing}
 .diagram-viewer-stage{position:absolute;inset:0}
-.diagram-viewer-stage>.narration-map-canvas{position:absolute;top:0;left:0;transform-origin:top left}
+.diagram-viewer-stage>.diagram-canvas{position:absolute;top:0;left:0;transform-origin:top left}
 @media(max-width:700px){
   .diagram-expand{display:flex;align-items:center;justify-content:center;width:max-content;min-height:40px;margin:0 auto 12px;padding:6px 11px;border:1px solid #d8cbb9;border-radius:3px;background:#fffdf8;color:#8f2b0c;font-size:.82rem;cursor:pointer}
-  .narration-map-preview{overflow:hidden}
-  .narration-map-canvas{width:720px}
-  .narration-map .map-node{width:auto;min-width:150px;margin:0}
-  .narration-map .map-chain .map-node{width:100%;max-width:360px}
-  .narration-map .dialogue-pair{grid-template-columns:minmax(170px,1fr) minmax(100px,150px) minmax(170px,1fr);gap:14px;width:100%;max-width:720px}
-  .narration-map .dialogue-pair>div{min-width:0}
-  .narration-map .dialogue-pair>div .map-node{width:100%;margin:0}
-  .narration-map .relation-line{width:auto;max-width:none;margin:0;flex-direction:row;transform:none}
-  .narration-map .relation-line:before,.narration-map .relation-line:after{width:auto;height:auto;flex:1;border:0;border-top:1px solid #b8704d}
-  .narration-map .relation-line span{padding:0 8px;background:transparent;font-size:.72rem}
-  .narration-map .relation-line b{font-size:1rem}
-  .narration-map .relation-line b:after{content:none}
-  .narration-map .nested-label{width:max-content;max-width:100%;margin:36px auto 22px;white-space:nowrap;text-align:center}
-  .narration-map .nested-label:before{height:36px}
-  .narration-map .branch-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-  .narration-map .branch-card{padding:15px 14px;border:0;border-top:2px solid #bc6a3f;background:#fff;text-align:center}
-  .narration-map .branch-card:nth-child(2n){border-top:2px solid #c79255;background:#fffdf8}
-  .narration-map .branch-card.divine{border-top:2px solid #245775;background:#f7f9fa}
-  .narration-map .branch-card:before{display:block}
-  .narration-map .branch-card b{font-size:.88rem}
-  .narration-map .branch-card span{display:block;margin-top:7px;font-size:.73rem}
-  .narration-map .map-legend{align-items:center;flex-direction:row;justify-content:center;gap:16px;margin-top:24px;font-size:.68rem}
-  .narration-map .map-arrow{height:31px;line-height:31px}
+  .diagram-preview{overflow:hidden}
+  .diagram-canvas{width:720px}
+  .diagram-canvas .map-node{width:auto;min-width:150px;margin:0}
+  .diagram-canvas .map-chain .map-node{width:100%;max-width:360px}
+  .diagram-canvas .dialogue-pair{grid-template-columns:minmax(170px,1fr) minmax(100px,150px) minmax(170px,1fr);gap:14px;width:100%;max-width:720px;margin-inline:auto}
+  .diagram-canvas .dialogue-pair>div{min-width:0}
+  .diagram-canvas .dialogue-pair>div .map-node{width:100%;margin:0}
+  .diagram-canvas .dialogue-pair.siblings{grid-template-columns:repeat(2,minmax(180px,1fr));gap:26px}
+  .diagram-canvas .relation-line{width:auto;max-width:none;margin:0;flex-direction:row;transform:none}
+  .diagram-canvas .relation-line:before,.diagram-canvas .relation-line:after{width:auto;height:auto;flex:1;border:0;border-top:1px solid #b8704d}
+  .diagram-canvas .relation-line span{padding:0 8px;background:transparent;font-size:.72rem}
+  .diagram-canvas .relation-line b{font-size:1rem}
+  .diagram-canvas .relation-line b:after{content:none}
+  .diagram-canvas .nested-label{width:max-content;max-width:100%;margin:36px auto 22px;white-space:nowrap;text-align:center}
+  .diagram-canvas .nested-label:before{height:36px}
+  .diagram-canvas .branch-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .diagram-canvas .branch-card{padding:15px 14px;border:0;border-top:2px solid #bc6a3f;background:#fff;text-align:center}
+  .diagram-canvas .branch-card:nth-child(2n){border-top:2px solid #c79255;background:#fffdf8}
+  .diagram-canvas .branch-card.divine{border-top:2px solid #245775;background:#f7f9fa}
+  .diagram-canvas .branch-card:before{display:block}
+  .diagram-canvas .branch-card b{font-size:.88rem}
+  .diagram-canvas .branch-card span{display:block;margin:7px 0 0;font-size:.73rem}
+  .diagram-canvas .map-legend{align-items:center;flex-direction:row;justify-content:center;gap:16px;margin-top:24px;font-size:.68rem}
+  .diagram-canvas .map-arrow{height:31px;line-height:31px}
+  .diagram-canvas.family-map{align-items:center;justify-content:flex-start}
+  .diagram-canvas.family-map>.map-node{align-self:center}
+  .diagram-canvas .family-split,.diagram-canvas .family-split.three{grid-template-columns:repeat(2,minmax(190px,1fr));width:min(680px,100%);gap:80px;margin-top:42px;padding-top:24px}
+  .diagram-canvas .family-split:before{content:"";position:absolute;left:25%;right:25%;top:0;display:block;width:auto;height:auto;border-top:1px solid #bca98f;border-left:0;text-align:initial;color:inherit;line-height:normal}
+  .diagram-canvas .family-split:after{content:"";position:absolute;left:50%;top:-42px;display:block;height:42px;border-left:1px solid #bca98f}
+  .diagram-canvas .family-branch{min-width:0;align-items:center;padding:0;border:0}
+  .diagram-canvas .family-branch:before{display:block;top:-24px;height:24px;border-left:1px solid #bca98f}
+  .diagram-canvas .family-branch>.map-node{width:auto;max-width:none}
+  .diagram-canvas .family-split.three{grid-template-columns:repeat(3,minmax(140px,1fr));gap:25px}
+  .diagram-canvas .family-split.three:before{left:16.66%;right:16.66%}
+  .diagram-canvas .siblings{margin-top:0}
+  .diagram-canvas .cosmos-level{display:flex;justify-content:center;align-items:center}
+  .diagram-canvas .cosmos-level.level-two{flex-direction:row;gap:0}
+  .diagram-canvas .level-three{grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin-top:30px;padding-top:25px}
+  .diagram-canvas .level-three:before{content:"";position:absolute;left:16.66%;right:16.66%;top:0;display:block;width:auto;height:auto;border-top:1px solid #bca98f;border-left:0;text-align:initial;color:inherit;line-height:normal}
+  .diagram-canvas .level-three>div{min-width:0;padding:0;border:0}
+  .diagram-canvas .level-three>div:before{display:block;left:50%;bottom:100%;height:25px;border-left:1px solid #bca98f}
+  .diagram-canvas .map-note{max-width:680px;margin:28px auto 0!important}
   .diagram-viewer-toolbar{align-items:center;flex-wrap:wrap;padding:8px;gap:6px}
   .diagram-viewer-title{flex:1 0 100%;text-align:center;font-size:.84rem}
   .diagram-viewer-controls{justify-content:center;width:100%;gap:4px}
@@ -1071,7 +1102,7 @@ function activateTab(index,{focus=false,scrollTop=false}={}){
   skipLink.href='#main-'+index;
   if(focus)tabs[index].focus();
   if(scrollTop)window.scrollTo({top:document.querySelector('.tabs').offsetTop,behavior:'smooth'});
-  requestAnimationFrame(()=>{observeActivePage();updateNarrationPreview()});
+  requestAnimationFrame(()=>{observeActivePage();updateDiagramPreviews()});
 }
 
 function pageIndexFor(element){return pages.findIndex(page=>page.contains(element))}
@@ -1105,28 +1136,32 @@ tabs.forEach((button,i)=>{
   });
 });
 
-const mapExpandButton=document.querySelector('[data-open-diagram-viewer]');
 const mapViewer=document.querySelector('[data-diagram-viewer]');
 const mapViewport=mapViewer?.querySelector('[data-map-viewport]');
 const mapStage=mapViewer?.querySelector('[data-map-stage]');
-const mapCanvas=document.querySelector('[data-map-canvas]');
-const mapPreview=document.querySelector('[data-map-preview]');
+const mapViewerTitle=mapViewer?.querySelector('.diagram-viewer-title');
+let mapCanvas=null,mapPreview=null,mapExpandButton=null;
 let mapReturnMarker=null,mapReturnFocus=null,mapReturnScrollY=0,mapSavedCanvasStyle=null,mapSavedPreviewStyle=null;
 let mapZoom=1,mapFitZoom=1,mapPanX=0,mapPanY=0,mapPointers=new Map(),mapDragStart=null,mapPinchStart=null;
 
-function updateNarrationPreview(){
-  if(!mapCanvas||!mapPreview||mapViewer?.open)return;
-  if(window.matchMedia('(max-width:700px)').matches){
-    const naturalWidth=mapCanvas.offsetWidth||720;
-    const scale=Math.min(1,mapPreview.clientWidth/naturalWidth);
-    mapCanvas.style.transformOrigin='top left';
-    mapCanvas.style.transform='scale('+scale+')';
-    mapPreview.style.height=(mapCanvas.offsetHeight*scale)+'px';
-  }else{
-    mapCanvas.style.transform='';
-    mapCanvas.style.transformOrigin='';
-    mapPreview.style.height='';
-  }
+function updateDiagramPreviews(){
+  if(mapViewer?.open)return;
+  const compact=window.matchMedia('(max-width:700px)').matches;
+  document.querySelectorAll('[data-map-canvas]').forEach(canvas=>{
+    const preview=canvas.closest('[data-map-preview]');
+    if(!preview)return;
+    if(compact){
+      const naturalWidth=canvas.offsetWidth||720;
+      const scale=Math.min(1,preview.clientWidth/naturalWidth);
+      canvas.style.transformOrigin='top left';
+      canvas.style.transform='scale('+scale+')';
+      preview.style.height=(canvas.offsetHeight*scale)+'px';
+    }else{
+      canvas.style.transform='';
+      canvas.style.transformOrigin='';
+      preview.style.height='';
+    }
+  });
 }
 
 function applyMapTransform(){
@@ -1155,24 +1190,31 @@ function zoomNarrationMap(nextZoom,anchorX=mapViewport.clientWidth/2,anchorY=map
   applyMapTransform();
 }
 
-if(mapExpandButton&&mapViewer&&mapViewport&&mapStage&&mapCanvas&&mapPreview){
-  const resizeObserver=new ResizeObserver(updateNarrationPreview);
-  resizeObserver.observe(mapPreview);
+if(mapViewer&&mapViewport&&mapStage){
+  const resizeObserver=new ResizeObserver(updateDiagramPreviews);
+  document.querySelectorAll('[data-map-preview]').forEach(preview=>resizeObserver.observe(preview));
   window.addEventListener('resize',()=>{
     if(mapViewer.open)fitNarrationMap();
-    else updateNarrationPreview();
+    else updateDiagramPreviews();
   });
-  mapExpandButton.addEventListener('click',()=>{
-    updateNarrationPreview();
-    mapReturnFocus=mapExpandButton;
+  document.addEventListener('click',event=>{
+    const button=event.target.closest('[data-open-diagram-viewer]');
+    if(!button)return;
+    mapExpandButton=button;
+    const figure=button.closest('.responsive-diagram');
+    mapCanvas=figure?.querySelector('[data-map-canvas]');
+    mapPreview=figure?.querySelector('[data-map-preview]');
+    if(!mapCanvas||!mapPreview)return;
+    updateDiagramPreviews();
+    mapReturnFocus=button;
     mapReturnScrollY=window.scrollY;
     mapSavedCanvasStyle=mapCanvas.getAttribute('style');
     mapSavedPreviewStyle=mapPreview.getAttribute('style');
+    if(mapViewerTitle)mapViewerTitle.textContent=figure.querySelector('figcaption strong')?.textContent||'চিত্র দেখুন';
     mapReturnMarker=document.createComment('মানচিত্রের আগের অবস্থান');
     mapCanvas.parentNode.insertBefore(mapReturnMarker,mapCanvas);
     mapCanvas.style.width=mapCanvas.offsetWidth+'px';
     mapCanvas.style.transform='none';
-    mapStage.classList.add('narration-map');
     mapStage.append(mapCanvas);
     mapViewer.showModal();
     requestAnimationFrame(()=>{fitNarrationMap();mapViewer.querySelector('[data-map-close]').focus()});
@@ -1183,14 +1225,14 @@ if(mapExpandButton&&mapViewer&&mapViewport&&mapStage&&mapCanvas&&mapPreview){
   mapViewer.querySelector('[data-map-zoom-out]').addEventListener('click',()=>zoomNarrationMap(mapZoom/1.25));
   mapViewer.addEventListener('click',event=>{if(event.target===mapViewer)mapViewer.close()});
   mapViewer.addEventListener('close',()=>{
+    if(!mapCanvas)return;
     if(mapReturnMarker?.parentNode)mapReturnMarker.parentNode.insertBefore(mapCanvas,mapReturnMarker);
     mapReturnMarker?.remove();
-    mapStage.classList.remove('narration-map');
     if(mapSavedCanvasStyle===null)mapCanvas.removeAttribute('style');else mapCanvas.setAttribute('style',mapSavedCanvasStyle);
     if(mapSavedPreviewStyle===null)mapPreview.removeAttribute('style');else mapPreview.setAttribute('style',mapSavedPreviewStyle);
     mapPointers.clear();mapDragStart=null;mapPinchStart=null;
     requestAnimationFrame(()=>{
-      updateNarrationPreview();
+      updateDiagramPreviews();
       if(mapReturnFocus?.isConnected)mapReturnFocus.focus({preventScroll:true});
       window.scrollTo(0,mapReturnScrollY);
     });
