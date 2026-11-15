@@ -1172,6 +1172,7 @@ if(mapExpandButton&&mapViewer&&mapViewport&&mapStage&&mapCanvas&&mapPreview){
     mapCanvas.parentNode.insertBefore(mapReturnMarker,mapCanvas);
     mapCanvas.style.width=mapCanvas.offsetWidth+'px';
     mapCanvas.style.transform='none';
+    mapStage.classList.add('narration-map');
     mapStage.append(mapCanvas);
     mapViewer.showModal();
     requestAnimationFrame(()=>{fitNarrationMap();mapViewer.querySelector('[data-map-close]').focus()});
@@ -1184,6 +1185,7 @@ if(mapExpandButton&&mapViewer&&mapViewport&&mapStage&&mapCanvas&&mapPreview){
   mapViewer.addEventListener('close',()=>{
     if(mapReturnMarker?.parentNode)mapReturnMarker.parentNode.insertBefore(mapCanvas,mapReturnMarker);
     mapReturnMarker?.remove();
+    mapStage.classList.remove('narration-map');
     if(mapSavedCanvasStyle===null)mapCanvas.removeAttribute('style');else mapCanvas.setAttribute('style',mapSavedCanvasStyle);
     if(mapSavedPreviewStyle===null)mapPreview.removeAttribute('style');else mapPreview.setAttribute('style',mapSavedPreviewStyle);
     mapPointers.clear();mapDragStart=null;mapPinchStart=null;
