@@ -112,6 +112,53 @@
 #page-3 .content[data-content="3"] .diagram-source summary{color:#8e3215}
 @media(max-width:700px){#page-3 .content[data-content="3"] h2{padding:.22rem .45rem}#page-3 .content[data-content="3"] .editorial-map{background:#fcfaf5}}
 @media print{#page-3 .content[data-content="3"] h2,#page-3 .content[data-content="3"] .editorial-map,#page-3 .content[data-content="3"] .branch-card,#page-3 .content[data-content="3"] tbody tr:nth-child(even){background:#fff;box-shadow:none}}
+/* সব ট্যাবের editorial map — desktop সম্পর্ক অক্ষুণ্ণ রেখে ছোট পর্দায় পরিষ্কার vertical flow */
+.editorial-map{min-width:0;max-width:100%}
+.editorial-map .map-node,.editorial-map .branch-card{min-width:0;overflow-wrap:anywhere}
+.editorial-map .text-map>pre,.editorial-map .diagram-source pre{max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch}
+@media(max-width:700px){
+  .editorial-map{margin:24px 0;padding:20px 12px}
+  .editorial-map figcaption{margin-bottom:18px}
+  .editorial-map .map-node{width:min(100%,28rem);min-width:0;margin-inline:auto;padding:10px 12px}
+  .editorial-map .map-node small{font-size:.78rem}
+  .editorial-map .map-chain{width:min(100%,28rem);max-width:100%}
+  .editorial-map .dialogue-pair{grid-template-columns:minmax(0,1fr);width:min(100%,28rem);max-width:100%;gap:0}
+  .editorial-map .dialogue-pair>div{min-width:0}
+  .editorial-map .relation-line{width:100%;max-width:9rem;margin:0 auto;flex-direction:column;gap:0;transform:none}
+  .editorial-map .relation-line:before,.editorial-map .relation-line:after{width:0;height:9px;flex:none;border:0;border-left:1px solid #b8704d}
+  .editorial-map .relation-line span{padding:2px 7px;background:#fcfaf5;font-size:.8rem;line-height:1.4}
+  .editorial-map .relation-line b{font-size:0;line-height:1}
+  .editorial-map .relation-line b:after{content:"↓";font-size:1rem}
+  .editorial-map .nested-label{max-width:100%;margin:22px auto 10px;white-space:normal;text-align:center}
+  .editorial-map .nested-label:before{height:18px}
+  .editorial-map .branch-grid{grid-template-columns:minmax(0,1fr);gap:8px}
+  .editorial-map .branch-grid:before{content:"↓";display:block;grid-column:1;text-align:center;color:#a84b26;line-height:1.4}
+  .editorial-map .branch-card{padding:11px 13px;border:1px solid #e2ded6;border-left:2px solid #bc6a3f;background:#fcfaf5;text-align:left}
+  .editorial-map .branch-card:nth-child(2n){border-top:1px solid #e2ded6;background:#fcfaf5}
+  .editorial-map .branch-card.divine{border-left-color:#245775;background:#f7f9fa}
+  .editorial-map .branch-card:before{display:none}
+  .editorial-map .branch-card b{font-size:.95rem}
+  .editorial-map .branch-card span{display:inline-block;margin:5px 10px 0 0;font-size:.82rem}
+  .editorial-map.family-map{align-items:stretch}
+  .editorial-map.family-map>.map-node{align-self:center}
+  .editorial-map .family-split,.editorial-map .family-split.three{grid-template-columns:minmax(0,1fr);width:100%;gap:8px;margin-top:12px;padding-top:0}
+  .editorial-map .family-split:before{content:"↓";position:static;left:auto;right:auto;top:auto;display:block;grid-column:1;width:auto;height:auto;border:0;text-align:center;color:#a84b26;line-height:1.4}
+  .editorial-map .family-split:after,.editorial-map .family-branch:before{display:none}
+  .editorial-map .family-branch{min-width:0;align-items:stretch;padding:8px 0 8px 12px;border-left:2px solid #c79255}
+  .editorial-map .family-branch>.map-node{width:100%;max-width:28rem}
+  .editorial-map .siblings{grid-template-columns:minmax(0,1fr);gap:0}
+  .editorial-map .siblings:before{content:"↓";display:block;grid-column:1;text-align:center;color:#a84b26;line-height:1.4}
+  .editorial-map .cosmos-level.level-two{flex-direction:column;gap:0}
+  .editorial-map .level-three{grid-template-columns:minmax(0,1fr);gap:8px;margin-top:12px;padding-top:0}
+  .editorial-map .level-three:before{content:"↓";position:static;left:auto;right:auto;top:auto;display:block;grid-column:1;width:auto;height:auto;border:0;text-align:center;color:#a84b26;line-height:1.4}
+  .editorial-map .level-three>div:before{display:none}
+  .editorial-map .level-three>div{min-width:0;padding:8px 0 8px 12px;border-left:2px solid #c79255}
+  .editorial-map .map-legend{gap:8px;margin-top:16px;font-size:.8rem}
+  .editorial-map .map-arrow{height:25px;line-height:25px}
+  .editorial-map .text-map>pre,.editorial-map .diagram-source pre{max-width:100%;padding:14px 10px;font-size:.78rem}
+  #page-3 .content[data-content="3"] .editorial-map .branch-card{border:1px solid #e2ded6;border-left:2px solid #bc6a3f;border-top:1px solid #e2ded6;background:#fcfaf5}
+  #page-3 .content[data-content="3"] .editorial-map .branch-card.divine{border-left-color:#245775;background:#f7f9fa}
+}
 @media print{.skandha-links{display:none}}
 </style>
 </head>
