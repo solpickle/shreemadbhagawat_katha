@@ -693,10 +693,12 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
         const introClass = prefix === "intro" ? ' class="intro-heading"' : "";
         if (prefix === "porichoy" && heading[1].length === 2) {
           const numbered = displayTitle.match(/^([০-৯]+\.)\s+(.+)$/u);
-          const titleHtml = numbered
-            ? `<span class="porichoy-section-number">${renderInline(numbered[1])}</span><span class="porichoy-section-title">${renderInline(numbered[2])}</span>`
-            : renderInline(displayTitle);
-          out.push(`<h${level} id="${id}" class="porichoy-chapter-heading">${titleHtml}</h${level}>`);
+          if (numbered) {
+            const titleHtml = `<span class="porichoy-section-number">${renderInline(numbered[1])}</span><span class="porichoy-section-title">${renderInline(numbered[2])}</span>`;
+            out.push(`<h${level} id="${id}" class="porichoy-chapter-heading">${titleHtml}</h${level}>`);
+          } else {
+            out.push(`<h${level} id="${id}" class="porichoy-plain-heading">${renderInline(displayTitle)}</h${level}>`);
+          }
         } else if (prefix === "porichoy" && heading[1].length === 3) {
           const subtitleClass = /শিক্ষা|মোড়/.test(clean) ? " porichoy-reflection-heading" : "";
           out.push(`<h${level} id="${id}" class="porichoy-subheading${subtitleClass}">${renderInline(displayTitle)}</h${level}>`);
@@ -998,6 +1000,7 @@ const html = `<!DOCTYPE html>
   margin:2.25rem 0 .85rem;padding:.25rem 0 .6rem;border:0;border-bottom:1px solid #e2d7c9;
   background:transparent;color:#763014;font-size:clamp(1.25rem,1.08rem + .52vw,1.55rem);line-height:1.5;
 }
+.content[data-content="0"] .porichoy-plain-heading{display:block;grid-template-columns:none;}
 .content[data-content="0"] .porichoy-section-number{
   display:inline-grid;place-items:center;min-height:1.8rem;margin-top:.12rem;padding:0 .35rem;
   border-radius:3px;background:#f4e9db;color:#a8320c;font-size:.82em;font-weight:600;
@@ -1019,6 +1022,7 @@ const html = `<!DOCTYPE html>
   margin:1.1rem 0 1.3rem;padding:1rem clamp(1rem,3vw,1.5rem);border:1px solid #d5e0e2;
   border-inline-start:3px solid #497285;border-radius:4px;background:#f4f8f8;color:#17556f;
 }
+.content[data-content="0"] blockquote.porichoy-scripture-quote::before{display:none}
 .content[data-content="0"] p.porichoy-thesis{margin:1.4rem 0;padding:1rem 1.15rem;border-inline-start:3px solid #497285;background:#f1f6f7;color:#234b5e;font-size:1.08em;font-weight:500}
 .content[data-content="0"] p.porichoy-flow-paragraph{margin:.72rem 0 1rem;line-height:1.9}
 .content[data-content="0"] ol.porichoy-takeaways{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem 1rem;margin:1rem 0 1.5rem;padding:0;list-style:none;counter-reset:porichoy-takeaway}
