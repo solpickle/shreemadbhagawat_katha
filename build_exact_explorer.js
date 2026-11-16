@@ -5,6 +5,7 @@ const vishnuArticle = require("./build_vishnu_article").buildArticle();
 
 const source = fs.readFileSync(path.join(__dirname, "..", "raw_conversation.md"), "utf8").replace(/\r\n/g, "\n");
 const integrationSource = fs.readFileSync(path.join(__dirname, "..", "BHAGAVATAM_CODEX_INTEGRATION.md"), "utf8").replace(/\r\n/g, "\n");
+const porichoyMarkdown = fs.readFileSync(path.join(__dirname, "..", "probo_1_porichoy.md"), "utf8").replace(/\r\n/g, "\n");
 
 function parseFrontmatter(markdown, filename) {
   const match = markdown.match(/^---\n([\s\S]*?)\n---\n/);
@@ -199,10 +200,8 @@ const chapters = [
   {
     id: "intro",
     title: "পরিচয়",
-    markdown: between(
-      "অবশ্যই। **শ্রীমদ্ভাগবত মহাপুরাণ**",
-      "\n---\n\n\n```\nShreemad Bhagawat er"
-    ),
+    renderPrefix: "porichoy",
+    markdown: porichoyMarkdown,
   },
   {
     id: "shlokas",
@@ -254,8 +253,8 @@ function slugify(text, prefix) {
 
 const detailedLessons = readDetailedLessonSources();
 
-function inline(text) {
-  return escapeHtml(withoutEmoji(text))
+function inline(text, preserveSource = false) {
+  return escapeHtml(preserveSource ? text : withoutEmoji(text))
     .replace(/\*\*([\s\S]+?)\*\*/g, "<strong>$1</strong>")
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*([^*]+)\*/g, "<em>$1</em>");
@@ -643,12 +642,13 @@ function editConversations(markdown) {
     .join("\n");
 }
 
-function markdownToHtml(markdown, prefix) {
+function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
   if (prefix === "shlokas") return renderShlokaChapter(markdown, prefix);
-  if (prefix === "intro") markdown = editIntroduction(markdown);
+  if (prefix === "intro" && !preserveSource) markdown = editIntroduction(markdown);
   if (prefix === "conversations") markdown = editConversations(markdown);
   if (prefix === "timeline") markdown = editTimeline(markdown);
   const lines = markdown.split("\n");
+  const renderInline = text => inline(text, preserveSource);
   const out = [];
   const nav = [];
   const skandhaStops = [];
@@ -670,7 +670,7 @@ function markdownToHtml(markdown, prefix) {
 
     const heading = line.match(/^(#{1,6})\s+(.+)$/);
     if (heading) {
-      const headingText = withoutEmoji(heading[2]);
+      const headingText = preserveSource ? heading[2] : withoutEmoji(heading[2]);
       const clean = headingText.replace(/\*\*/g, "").trim();
       const id = slugify(clean, prefix);
       const isDialogue = prefix === "conversations" && /^[④-⑳]/u.test(clean);
@@ -681,7 +681,7 @@ function markdownToHtml(markdown, prefix) {
         : prefix === "conversations" ? conversationHeadings
         : prefix === "timeline" ? timelineHeadings
         : prefix.startsWith("shlokas-") ? verseSectionHeadings : {};
-      const displayTitle = (prefix === "conversations" ? conversationHeadingValue(headings, clean) : headings[clean]) ?? headingText;
+      const displayTitle = preserveSource ? headingText : (prefix === "conversations" ? conversationHeadingValue(headings, clean) : headings[clean]) ?? headingText;
       if (heading[1].length <= 3) nav.push({ id, title: displayTitle === headingText ? clean : displayTitle });
       if (isSkandha) {
         const [number, topic] = displayTitle.split(" — ", 2);
@@ -689,7 +689,7 @@ function markdownToHtml(markdown, prefix) {
         out.push(`<h3 id="${id}" class="skandha-stop"><span>${inline(number)}</span> ${inline(topic)}</h3>`);
       } else {
         const introClass = prefix === "intro" ? ' class="intro-heading"' : "";
-        out.push(`<h${level} id="${id}"${introClass}>${inline(displayTitle)}</h${level}>`);
+        out.push(`<h${level} id="${id}"${introClass}>${renderInline(displayTitle)}</h${level}>`);
       }
       i++;
       continue;
@@ -709,7 +709,7 @@ function markdownToHtml(markdown, prefix) {
       }
       const header = rows[0];
       const body = rows.slice(2);
-      out.push(`<div class="table-wrap"><table><thead><tr>${header.map(c => `<th>${inline(c)}</th>`).join("")}</tr></thead><tbody>${body.map(r => `<tr>${r.map(c => `<td>${inline(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
+      out.push(`<div class="table-wrap"><table><thead><tr>${header.map(c => `<th>${renderInline(c)}</th>`).join("")}</tr></thead><tbody>${body.map(r => `<tr>${r.map(c => `<td>${renderInline(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
       continue;
     }
 
@@ -719,27 +719,37 @@ function markdownToHtml(markdown, prefix) {
         if (lines[i].startsWith(">")) quote.push(lines[i].replace(/^>\s?/, ""));
         i++;
       }
-      out.push(`<blockquote>${inline(quote.join("\n")).replace(/\n/g, "<br>")}</blockquote>`);
+      out.push(`<blockquote>${renderInline(quote.join("\n")).replace(/\n/g, "<br>")}</blockquote>`);
       continue;
     }
 
     if (/^[-*]\s+/.test(line)) {
       const items = [];
-      while (i < lines.length && /^[-*]\s+/.test(lines[i])) {
+      while (i < lines.length) {
+        if (!/^[-*]\s+/.test(lines[i])) {
+          if (!lines[i].trim() && i + 1 < lines.length && /^[-*]\s+/.test(lines[i + 1])) { i++; continue; }
+          break;
+        }
         items.push(lines[i].replace(/^[-*]\s+/, ""));
         i++;
       }
-      out.push(`<ul>${items.map(x => `<li>${inline(x)}</li>`).join("")}</ul>`);
+      out.push(`<ul>${items.map(x => `<li>${renderInline(x)}</li>`).join("")}</ul>`);
       continue;
     }
 
-    if (/^\d+\.\s+/.test(line)) {
+    if (/^[0-9০-৯]+\.\s+/.test(line)) {
+      const bengaliNumbering = /^[০-৯]/.test(line);
       const items = [];
-      while (i < lines.length && /^\d+\.\s+/.test(lines[i])) {
-        items.push(lines[i].replace(/^\d+\.\s+/, ""));
+      while (i < lines.length) {
+        const nextItem = lines[i].match(/^([0-9০-৯]+)\.\s+/);
+        if (!nextItem || /^[০-৯]/.test(nextItem[1]) !== bengaliNumbering) {
+          if (!lines[i].trim() && i + 1 < lines.length && /^[0-9০-৯]+\.\s+/.test(lines[i + 1]) && /^[০-৯]/.test(lines[i + 1]) === bengaliNumbering) { i++; continue; }
+          break;
+        }
+        items.push(lines[i].replace(/^[0-9০-৯]+\.\s+/, ""));
         i++;
       }
-      out.push(`<ol>${items.map(x => `<li>${inline(x)}</li>`).join("")}</ol>`);
+      out.push(`<ol${bengaliNumbering ? ' class="bn-numbered-list"' : ""}>${items.map(x => `<li>${renderInline(x)}</li>`).join("")}</ol>`);
       continue;
     }
 
@@ -753,7 +763,7 @@ function markdownToHtml(markdown, prefix) {
     while (
       i < lines.length && lines[i].trim() &&
       !lines[i].startsWith("#") && !lines[i].startsWith("```") &&
-      !lines[i].startsWith(">") && !/^[-*]\s+/.test(lines[i]) && !/^\d+\.\s+/.test(lines[i]) &&
+      !lines[i].startsWith(">") && !/^[-*]\s+/.test(lines[i]) && !/^[0-9০-৯]+\.\s+/.test(lines[i]) &&
       !/^\s*---+\s*$/.test(lines[i]) && !lines[i].trim().startsWith("|")
     ) {
       paragraph.push(lines[i].trim());
@@ -766,7 +776,10 @@ function markdownToHtml(markdown, prefix) {
       else if (line.startsWith("**আমার জীবন সীমিত")) paragraphClass = ' class="intro-note intro-question"';
       else if (line.startsWith("**“স বৈ পুংসাং")) paragraphClass = ' class="intro-verse"';
     }
-    out.push(`<p${paragraphClass}>${inline(paragraph.join("\n")).replace(/\n/g, "<br>")}</p>`);
+    if (prefix === "porichoy" && (line.startsWith("**পাঠমালা:**") || line.startsWith("**প্রধান শাস্ত্রীয় ভিত্তি:**"))) {
+      paragraphClass = ' class="porichoy-meta"';
+    }
+    out.push(`<p${paragraphClass}>${renderInline(paragraph.join("\n")).replace(/\n/g, "<br>")}</p>`);
   }
 
   if (skandhaStops.length) addSkandhaNavigation(out, skandhaStops);
@@ -833,7 +846,7 @@ function renderStoryModule() {
 
 const rendered = chapters.map(chapter => chapter.storyModule
   ? { ...chapter, html: renderStoryModule(), nav: storyIntegration.skandhas.map(item => ({ id: `stories-skandha-${item.number}`, title: `${item.ordinal} স্কন্ধ` })), storyModule: true }
-  : { ...chapter, ...markdownToHtml(chapter.markdown, chapter.id) });
+  : { ...chapter, ...markdownToHtml(chapter.markdown, chapter.renderPrefix || chapter.id, { preserveSource: chapter.renderPrefix === "porichoy" }) });
 rendered.push({
   id: "detailed-lessons",
   title: "বিশদ পাঠ",
@@ -902,9 +915,36 @@ const html = `<!DOCTYPE html>
 .content .intro-question strong,.content .intro-verse strong{color:inherit}
 .content .intro-verse{border:0;border-inline-start:2px solid #497285;background:#f7f9fa;color:#234b5e}
 .intro-verse em{font-size:.84rem;font-style:normal}
+.content[data-content="0"] > h2:first-child{
+  margin:0 0 .35rem;padding:0 0 1rem;border-bottom:1px solid #ddd2c2;
+  color:#8f2b0c;font-size:clamp(2rem,4vw,3rem);line-height:1.3;
+}
+.content[data-content="0"] > h4:first-of-type{
+  margin:.55rem 0 1.35rem;color:#6c6256;font-size:clamp(1.12rem,1rem + .6vw,1.45rem);font-weight:500;line-height:1.55;
+}
+.content[data-content="0"] .porichoy-meta{
+  display:table;max-width:100%;margin:.45rem 0!important;padding:.34rem .72rem;
+  border-inline-start:2px solid #bd6b40;background:#f5f0e8;color:#665c52!important;font-size:.88rem;line-height:1.65;
+}
+.content[data-content="0"] .porichoy-meta strong{color:#923713}
+.content[data-content="0"] h3{
+  margin:2.4rem 0 .9rem;padding:.58rem .85rem;border-inline-start:3px solid #a8320c;
+  background:#faf4ec;color:#763014;font-size:clamp(1.32rem,1.1rem + .65vw,1.7rem);line-height:1.55;
+}
+.content[data-content="0"] h4{
+  margin:1.8rem 0 .65rem;padding-bottom:.35rem;border-bottom:1px solid #e9dfd2;
+  color:#315e63;font-size:1.15rem;line-height:1.55;
+}
+.content[data-content="0"] .table-wrap{border-color:#ded2c2;border-radius:5px;background:#fffdf9;box-shadow:0 8px 24px rgba(74,49,31,.06)}
+.content[data-content="0"] .table-wrap table{min-width:700px;background:transparent}
+.content[data-content="0"] .table-wrap th{color:#763014;background:#f3ece1}
+.content[data-content="0"] .table-wrap td{color:#34302c}
+.content[data-content="0"] ol.bn-numbered-list{list-style-type:bengali-numerals}
+@counter-style bengali-numerals{system:numeric;symbols:"০" "১" "২" "৩" "৪" "৫" "৬" "৭" "৮" "৯";suffix:". "}
 @media print{
   .content .intro-lead,.content .intro-note,.content .intro-verse{background:#fff;break-inside:avoid}
   .content .intro-heading{background:#fff}
+  .content[data-content="0"] h3,.content[data-content="0"] h4{break-after:avoid;background:#fff}
 }
 </style>
 <style>
