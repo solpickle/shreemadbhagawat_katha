@@ -13,6 +13,8 @@ assert(html.includes('<html lang="bn">'), "Bengali document language is missing"
 assert(html.includes(">গল্প ও শিক্ষা</button>"), "গল্প ও শিক্ষা tab is missing");
 assert(html.includes('data-tab="5">বিশদ পাঠ</button>'), "বিশদ পাঠ primary tab is missing");
 assert((html.match(/<button class="tab [^"]*" id="tab-/g) || []).length === 6, "Expected six primary tabs");
+const primaryTabOrder = [...html.matchAll(/<button class="tab [^"]*" id="tab-\d+"[^>]*>([^<]+)<\/button>/g)].map(match => match[1]);
+assert(primaryTabOrder[0] === "পরিচয়" && primaryTabOrder[1] === "বিশদ পাঠ", "বিশদ পাঠ must follow পরিচয় in the primary tab order");
 
 const embeddedMatch = html.match(/const storyData=([\s\S]*?);\r?\nconst tabs=/);
 assert(embeddedMatch, "Embedded story data is missing");
@@ -37,6 +39,35 @@ requiredFonts.forEach(font => assert(fs.existsSync(font), `Required font is miss
 
 const articlePath = 'articles/vishnu-cosmology.html';
 assert(html.includes(`href="${articlePath}"`), 'Standalone article link is missing from the library');
+const chotushlokiPath = 'articles/chotushloki-bhagavat.html';
+assert(html.includes(`href="${chotushlokiPath}"`), 'চতুঃশ্লোকী standalone article link is missing from the library');
+const chotushloki = fs.readFileSync(chotushlokiPath, 'utf8');
+assert(chotushloki.includes('<html lang="bn">'), 'চতুঃশ্লোকী article must use Bengali document language');
+assert(chotushloki.includes('পর্ব ২: চতুঃশ্লোকী ভাগবত'), 'চতুঃশ্লোকী article title is missing');
+assert(chotushloki.includes('ব্রহ্মার জিজ্ঞাসা, ভগবানের উপদেশ এবং সৃষ্টি, মায়া ও পরমসত্যের রহস্য'), 'চতুঃশ্লোকী article deck is missing');
+assert(chotushloki.includes('শ্রীমদ্ভাগবত ২.৯.৩৩–৩৬'), 'চতুঃশ্লোকী scripture reference is missing');
+assert(!/class="porichoy-[^"]+"/.test(chotushloki), 'Porichoy-only classes leaked into the standalone article');
+for (const verse of ['অহমেবাসমেবাগ্রে', 'ঋতেঽর্থং যৎ প্রতীয়েত', 'যথা মহান্তি ভূতানি', 'এতাবদেব জিজ্ঞাস্যং']) {
+  assert(chotushloki.includes(verse), `A Chatuḥśloki verse is missing: ${verse}`);
+}
+assert(chotushloki.includes('../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title'), 'চতুঃশ্লোকী return link is missing');
+const chotushlokiIds = [...chotushloki.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
+assert(new Set(chotushlokiIds).size === chotushlokiIds.length, 'Duplicate চতুঃশ্লোকী article anchor IDs');
+const chotushlokiToc = chotushloki.match(/<aside class="article-toc"[\s\S]*?<nav>([\s\S]*?)<\/nav>/);
+assert(chotushlokiToc && (chotushlokiToc[1].match(/<a href="#chotushloki-section-/g) || []).length === 17, 'চতুঃশ্লোকী article table of contents is incomplete');
+const chotushlokiLinks = [...chotushloki.matchAll(/(?:src|href)="([^"]+)"/g)].map(match => match[1]);
+chotushlokiLinks.forEach(link => {
+  if (/^https?:/.test(link)) return;
+  if (link.startsWith('#')) {
+    if (link.length > 1) assert(chotushlokiIds.includes(link.slice(1)), `চতুঃশ্লোকী article anchor target missing: ${link}`);
+    return;
+  }
+  const file = decodeURIComponent(link.split('#')[0]);
+  assert(fs.existsSync(path.resolve(path.dirname(chotushlokiPath), file)), `চতুঃশ্লোকী article asset or return target missing: ${link}`);
+});
+const chotushlokiScript = chotushloki.match(/<script>([\s\S]*?)<\/script>/);
+assert(chotushlokiScript, 'চতুঃশ্লোকী reading progress script is missing');
+new Function(chotushlokiScript[1]);
 const article = fs.readFileSync(articlePath, 'utf8');
 assert(article.includes('<html lang="bn">'), 'Article must use Bengali document language');
 assert((article.match(/class="article-part"/g) || []).length === 8, 'Expected eight complete article parts');
@@ -77,5 +108,6 @@ console.log(JSON.stringify({
   detailedLessons,
   browserScriptSyntax: "valid",
   fonts: requiredFonts.length,
+  chotushlokiArticle: { anchors: chotushlokiIds.length, verses: 4, links: 'valid' },
   standaloneArticle: { parts: 8, illustrations: articleImages, quizCards, repairedCaptions: figureContexts, numbering: 'Bengali', links: 'valid' },
 }, null, 2));
