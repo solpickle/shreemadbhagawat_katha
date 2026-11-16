@@ -908,6 +908,10 @@ rendered.push({
   nav: [...detailedLessons.map(lesson => ({ id: lesson.id, title: lesson.title })), { id: vishnuArticle.entryId, title: vishnuArticle.title }],
   detailedLessonModule: true,
 });
+const tabOrder = rendered.map((_, index) => index);
+const detailedLessonsTabIndex = rendered.findIndex(item => item.id === "detailed-lessons");
+tabOrder.splice(tabOrder.indexOf(detailedLessonsTabIndex), 1);
+tabOrder.splice(1, 0, detailedLessonsTabIndex);
 
 const html = `<!DOCTYPE html>
 <html lang="bn">
@@ -1208,7 +1212,7 @@ const html = `<!DOCTYPE html>
 <body>
 <a class="skip-link" id="skip-link" href="#main-0">মূল লেখায় যান</a>
 <header class="hero"><div class="eyebrow">শ্রবণ • কীর্তন • স্মরণ • ভক্তি</div><h1>শ্রীমদ্ভাগবত মহাপুরাণ</h1></header>
-<nav class="tabs" id="tabs" role="tablist" aria-label="প্রধান বিভাগ">${rendered.map((x,i)=>`<button class="tab ${i===0?"active":""}" id="tab-${i}" role="tab" aria-selected="${i===0}" aria-controls="page-${i}" tabindex="${i===0?0:-1}" data-tab="${i}">${x.title}</button>`).join("")}</nav>
+<nav class="tabs" id="tabs" role="tablist" aria-label="প্রধান বিভাগ">${tabOrder.map((pageIndex,position)=>`<button class="tab ${position===0?"active":""}" id="tab-${pageIndex}" role="tab" aria-selected="${position===0}" aria-controls="page-${pageIndex}" tabindex="${position===0?0:-1}" data-tab="${pageIndex}">${rendered[pageIndex].title}</button>`).join("")}</nav>
 <div id="pages">${rendered.map((x,i)=>`<section class="page ${i===0?"active":""}" id="page-${i}" role="tabpanel" aria-labelledby="tab-${i}" ${i===0?"":"hidden"}><aside class="side" aria-label="এই বিভাগের সূচি">${x.storyModule?`<div data-story-skandha-nav><div class="side-title">১২ স্কন্ধ</div><nav class="story-side-nav" aria-label="স্কন্ধ নির্বাচন">${storyIntegration.skandhas.map((item,index)=>`<button type="button" class="${index===0?"active":""}" data-select-skandha="${item.number}" aria-pressed="${index===0}">${item.ordinal} স্কন্ধ</button>`).join("")}</nav></div>`:`<div class="desktop-toc"><div class="side-title">এই বিভাগের সূচি</div><input class="search" type="search" aria-label="এই বিভাগে খুঁজুন" placeholder="এই বিভাগে খুঁজুন…" data-search="${i}">${x.nav.map(n=>`<a href="#${n.id}">${n.title}</a>`).join("")}</div><details class="mobile-toc"><summary>এই বিভাগের সূচি</summary><div class="mobile-toc-links"><input class="search" type="search" aria-label="এই বিভাগে খুঁজুন" placeholder="এই বিভাগে খুঁজুন…" data-search="${i}">${x.nav.map(n=>`<a href="#${n.id}">${n.title}</a>`).join("")}</div></details>`}</aside><main class="main-content" id="main-${i}" tabindex="-1"><article class="content" data-content="${i}">${x.html}</article></main></section>`).join("")}</div>
 <dialog id="diagram-viewer" class="diagram-viewer" aria-labelledby="diagram-viewer-title" data-diagram-viewer><div class="diagram-viewer-shell"><header class="diagram-viewer-toolbar"><h2 id="diagram-viewer-title" class="diagram-viewer-title">কথোপকথনের প্রধান স্থাপত্য</h2><div class="diagram-viewer-controls"><button type="button" data-map-zoom-out aria-label="চিত্র ছোট করুন">−</button><button type="button" data-map-zoom-in aria-label="চিত্র বড় করুন">+</button><button type="button" data-map-fit>পুরো চিত্র</button><button type="button" data-map-close aria-label="চিত্র বন্ধ করুন">বন্ধ</button></div></header><div class="diagram-viewer-viewport" data-map-viewport tabindex="0" aria-label="চিত্র টেনে সরান বা দুই আঙুলে বড়-ছোট করুন"><div class="diagram-viewer-stage" data-map-stage></div></div></div></dialog>
 <footer>॥ ওঁ নমো ভগবতে বাসুদেবায় ॥<br>ঘটনার কালক্রম ও কথনের কালক্রম ইচ্ছাকৃতভাবে আলাদা রাখা হয়েছে।</footer>
@@ -1220,8 +1224,8 @@ const skipLink=document.getElementById('skip-link');
 let tocObserver;
 
 function activateTab(index,{focus=false,scrollTop=false}={}){
-  tabs.forEach((tab,i)=>{
-    const active=i===index;
+  tabs.forEach(tab=>{
+    const active=Number(tab.dataset.tab)===index;
     tab.classList.toggle('active',active);
     tab.setAttribute('aria-selected',String(active));
     tab.tabIndex=active?0:-1;
@@ -1232,7 +1236,7 @@ function activateTab(index,{focus=false,scrollTop=false}={}){
     page.hidden=!active;
   });
   skipLink.href='#main-'+index;
-  if(focus)tabs[index].focus();
+  if(focus)tabs.find(tab=>Number(tab.dataset.tab)===index)?.focus();
   if(scrollTop)window.scrollTo({top:document.querySelector('.tabs').offsetTop,behavior:'smooth'});
   requestAnimationFrame(()=>{observeActivePage();updateDiagramPreviews()});
 }
@@ -1254,17 +1258,17 @@ function openHash(scroll=true){
   return true;
 }
 
-tabs.forEach((button,i)=>{
-  button.addEventListener('click',()=>activateTab(i,{scrollTop:true}));
+tabs.forEach((button,orderIndex)=>{
+  button.addEventListener('click',()=>activateTab(Number(button.dataset.tab),{scrollTop:true}));
   button.addEventListener('keydown',event=>{
     let next;
-    if(event.key==='ArrowRight'||event.key==='ArrowDown')next=(i+1)%tabs.length;
-    if(event.key==='ArrowLeft'||event.key==='ArrowUp')next=(i-1+tabs.length)%tabs.length;
+    if(event.key==='ArrowRight'||event.key==='ArrowDown')next=(orderIndex+1)%tabs.length;
+    if(event.key==='ArrowLeft'||event.key==='ArrowUp')next=(orderIndex-1+tabs.length)%tabs.length;
     if(event.key==='Home')next=0;
     if(event.key==='End')next=tabs.length-1;
     if(next===undefined)return;
     event.preventDefault();
-    activateTab(next,{focus:true,scrollTop:true});
+    activateTab(Number(tabs[next].dataset.tab),{focus:true,scrollTop:true});
   });
 });
 
