@@ -804,8 +804,38 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
     out.push(`<p${paragraphClass}>${renderInline(paragraph.join("\n")).replace(/\n/g, "<br>")}</p>`);
   }
 
+  if (prefix === "porichoy") combinePorichoyParagraphs(out);
   if (skandhaStops.length) addSkandhaNavigation(out, skandhaStops);
   return { html: out.join("\n"), nav };
+}
+
+function combinePorichoyParagraphs(blocks) {
+  const isPlainParagraph = block => /^<p>([\s\S]*)<\/p>$/.test(block) && !/<[^>]+>/.test(block.slice(3, -4));
+  const contentOf = block => block.slice(3, -4);
+  const textOf = block => contentOf(block).replace(/&(?:amp|lt|gt|quot|#39);/g, "x");
+  const shouldKeepApart = text =>
+    /^(?:ঘটনা|প্রধান চরিত্র|বৃহত্তর কথনপ্রেক্ষাপট|মূল শিক্ষা)\s*[—:]/.test(text);
+
+  for (let index = 0; index < blocks.length;) {
+    if (!isPlainParagraph(blocks[index])) { index++; continue; }
+    const group = [blocks[index]];
+    let combinedLength = textOf(blocks[index]).length;
+    let next = index + 1;
+    while (next < blocks.length && isPlainParagraph(blocks[next])) {
+      const nextText = textOf(blocks[next]);
+      if (combinedLength > 145 || nextText.length > 145 || shouldKeepApart(nextText) || combinedLength + nextText.length > 285) break;
+      group.push(blocks[next]);
+      combinedLength += nextText.length;
+      next++;
+    }
+    if (group.length > 1) {
+      const joinedText = group.map(contentOf).join(" ");
+      blocks.splice(index, group.length, `<p class="porichoy-flow-paragraph">${joinedText}</p>`);
+      index++;
+    } else {
+      index++;
+    }
+  }
 }
 
 function addSkandhaNavigation(blocks, stops) {
@@ -990,6 +1020,7 @@ const html = `<!DOCTYPE html>
   border-inline-start:3px solid #497285;border-radius:4px;background:#f4f8f8;color:#17556f;
 }
 .content[data-content="0"] p.porichoy-thesis{margin:1.4rem 0;padding:1rem 1.15rem;border-inline-start:3px solid #497285;background:#f1f6f7;color:#234b5e;font-size:1.08em;font-weight:500}
+.content[data-content="0"] p.porichoy-flow-paragraph{margin:.72rem 0 1rem;line-height:1.9}
 .content[data-content="0"] ol.porichoy-takeaways{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem 1rem;margin:1rem 0 1.5rem;padding:0;list-style:none;counter-reset:porichoy-takeaway}
 .content[data-content="0"] ol.porichoy-takeaways li{position:relative;min-height:3.1rem;margin:0;padding:.72rem .85rem .72rem 2.8rem;border:1px solid #e6ddd1;border-radius:4px;background:#fcfaf6;counter-increment:porichoy-takeaway}
 .content[data-content="0"] ol.porichoy-takeaways li::before{content:counter(porichoy-takeaway,"bengali-numerals");position:absolute;inset-inline-start:.75rem;top:.68rem;color:#a8320c;font-weight:600}
