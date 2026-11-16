@@ -20,6 +20,7 @@ This repository contains a Bengali educational website explaining Śrīmad Bhāg
 - Keep private/raw conversation Markdown outside the public repository unless the user explicitly asks to publish or commit it. Check staged files before every commit so source notes are not pushed accidentally.
 
 ## Markdown articles and editorial rendering
+- Follow [`EDITORIAL_STYLE_GUIDE.md`](EDITORIAL_STYLE_GUIDE.md) for the shared HTML, CSS, typography, color, responsive-layout, and component patterns.
 - New long-form Markdown articles should use the site's existing editorial reading theme: restrained terracotta, warm paper, and muted blue-green accents; avoid dashboard-like cards, decorative emoji, and excessive whitespace.
 - Preserve Markdown headings, lists, blockquotes, scripture, references, and tables as distinct structures. Join adjacent short prose paragraphs only when they clearly form one continuous thought; keep the source wording and sentence order exact.
 - Apply numbered-heading layouts only when the heading actually has a Bengali section number. For unnumbered headings, use a full-width heading style; never let a bare text node inherit a narrow number column.
