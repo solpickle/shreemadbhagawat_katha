@@ -16,6 +16,16 @@ This repository contains a Bengali educational website explaining Śrīmad Bhāg
 - Preserve original ślokas, Bengali translations, references, and explanations.
 - Do not silently change Sanskrit transliteration or Bengali spelling.
 - Maintain UTF-8 encoding.
+- Treat user-provided Markdown articles as locked source text unless the user explicitly asks for proofreading or wording changes. Styling, layout, and paragraph-flow edits must not paraphrase, summarize, translate, or omit their sentences.
+- Keep private/raw conversation Markdown outside the public repository unless the user explicitly asks to publish or commit it. Check staged files before every commit so source notes are not pushed accidentally.
+
+## Markdown articles and editorial rendering
+- New long-form Markdown articles should use the site's existing editorial reading theme: restrained terracotta, warm paper, and muted blue-green accents; avoid dashboard-like cards, decorative emoji, and excessive whitespace.
+- Preserve Markdown headings, lists, blockquotes, scripture, references, and tables as distinct structures. Join adjacent short prose paragraphs only when they clearly form one continuous thought; keep the source wording and sentence order exact.
+- Apply numbered-heading layouts only when the heading actually has a Bengali section number. For unnumbered headings, use a full-width heading style; never let a bare text node inherit a narrow number column.
+- Decorative blockquote marks must not overlap Bengali text or Sanskrit verses. Check quote padding and pseudo-elements at desktop and mobile widths.
+- When a renderer adds special classes or CSS for one article, scope them to that article/content pane so other tabs keep their existing design.
+- After changing the Markdown renderer, rebuild the committed HTML and inspect representative output: numbered and unnumbered headings, prose paragraph flow, lists, tables, and scripture quotes. Validate mobile and desktop layout when the change affects styling.
 
 ## Testing
 - Run targeted tests when possible.
