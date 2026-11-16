@@ -652,6 +652,7 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
   const out = [];
   const nav = [];
   const skandhaStops = [];
+  let currentSection = "";
   let i = 0;
 
   while (i < lines.length) {
@@ -672,6 +673,7 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
     if (heading) {
       const headingText = preserveSource ? heading[2] : withoutEmoji(heading[2]);
       const clean = headingText.replace(/\*\*/g, "").trim();
+      if (prefix === "porichoy" && heading[1].length === 2) currentSection = clean;
       const id = slugify(clean, prefix);
       const isDialogue = prefix === "conversations" && /^[④-⑳]/u.test(clean);
       const isSkandha = prefix === "conversations" && /^স্কন্ধ [০-৯]+ /u.test(clean);
@@ -689,7 +691,18 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
         out.push(`<h3 id="${id}" class="skandha-stop"><span>${inline(number)}</span> ${inline(topic)}</h3>`);
       } else {
         const introClass = prefix === "intro" ? ' class="intro-heading"' : "";
-        out.push(`<h${level} id="${id}"${introClass}>${renderInline(displayTitle)}</h${level}>`);
+        if (prefix === "porichoy" && heading[1].length === 2) {
+          const numbered = displayTitle.match(/^([০-৯]+\.)\s+(.+)$/u);
+          const titleHtml = numbered
+            ? `<span class="porichoy-section-number">${renderInline(numbered[1])}</span><span class="porichoy-section-title">${renderInline(numbered[2])}</span>`
+            : renderInline(displayTitle);
+          out.push(`<h${level} id="${id}" class="porichoy-chapter-heading">${titleHtml}</h${level}>`);
+        } else if (prefix === "porichoy" && heading[1].length === 3) {
+          const subtitleClass = /শিক্ষা|মোড়/.test(clean) ? " porichoy-reflection-heading" : "";
+          out.push(`<h${level} id="${id}" class="porichoy-subheading${subtitleClass}">${renderInline(displayTitle)}</h${level}>`);
+        } else {
+          out.push(`<h${level} id="${id}"${introClass}>${renderInline(displayTitle)}</h${level}>`);
+        }
       }
       i++;
       continue;
@@ -719,7 +732,8 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
         if (lines[i].startsWith(">")) quote.push(lines[i].replace(/^>\s?/, ""));
         i++;
       }
-      out.push(`<blockquote>${renderInline(quote.join("\n")).replace(/\n/g, "<br>")}</blockquote>`);
+      const quoteClass = prefix === "porichoy" ? ' class="porichoy-scripture-quote"' : "";
+      out.push(`<blockquote${quoteClass}>${renderInline(quote.join("\n")).replace(/\n/g, "<br>")}</blockquote>`);
       continue;
     }
 
@@ -749,7 +763,8 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
         items.push(lines[i].replace(/^[0-9০-৯]+\.\s+/, ""));
         i++;
       }
-      out.push(`<ol${bengaliNumbering ? ' class="bn-numbered-list"' : ""}>${items.map(x => `<li>${renderInline(x)}</li>`).join("")}</ol>`);
+      const listClasses = [bengaliNumbering ? "bn-numbered-list" : "", prefix === "porichoy" && currentSection === "এই পর্ব থেকে আমাদের প্রধান শিক্ষা" ? "porichoy-takeaways" : ""].filter(Boolean).join(" ");
+      out.push(`<ol${listClasses ? ` class="${listClasses}"` : ""}>${items.map(x => `<li>${renderInline(x)}</li>`).join("")}</ol>`);
       continue;
     }
 
@@ -778,6 +793,13 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
     }
     if (prefix === "porichoy" && (line.startsWith("**পাঠমালা:**") || line.startsWith("**প্রধান শাস্ত্রীয় ভিত্তি:**"))) {
       paragraphClass = ' class="porichoy-meta"';
+    }
+    if (prefix === "porichoy" && !paragraphClass) {
+      const text = paragraph.join(" ");
+      if (/^\*\*.+\?\*\*$/.test(text)) paragraphClass = ' class="porichoy-question"';
+      else if (/^\*\*(?:প্রথম|দ্বিতীয়|তৃতীয়) স্তর:/.test(text)) paragraphClass = ' class="porichoy-flow-step"';
+      else if (/^\*\*(?:কল্প|মন্বন্তর|যুগ|বংশপরম্পরা|কথনকাল):\*\*/.test(text)) paragraphClass = ' class="porichoy-definition"';
+      else if (/^\*\*ভাগবত আমাদের শুধু ভগবানের কথা/.test(text)) paragraphClass = ' class="porichoy-thesis"';
     }
     out.push(`<p${paragraphClass}>${renderInline(paragraph.join("\n")).replace(/\n/g, "<br>")}</p>`);
   }
@@ -940,6 +962,41 @@ const html = `<!DOCTYPE html>
 .content[data-content="0"] .table-wrap th{color:#763014;background:#f3ece1}
 .content[data-content="0"] .table-wrap td{color:#34302c}
 .content[data-content="0"] ol.bn-numbered-list{list-style-type:bengali-numerals}
+/* পরিচয়: একটানা প্রবন্ধে পাঠের ছন্দ ও বিষয়ভিত্তিক দৃশ্যভেদ */
+.content[data-content="0"] .porichoy-chapter-heading{
+  display:grid;grid-template-columns:2.15rem minmax(0,1fr);align-items:start;gap:.65rem;
+  margin:2.25rem 0 .85rem;padding:.25rem 0 .6rem;border:0;border-bottom:1px solid #e2d7c9;
+  background:transparent;color:#763014;font-size:clamp(1.25rem,1.08rem + .52vw,1.55rem);line-height:1.5;
+}
+.content[data-content="0"] .porichoy-section-number{
+  display:inline-grid;place-items:center;min-height:1.8rem;margin-top:.12rem;padding:0 .35rem;
+  border-radius:3px;background:#f4e9db;color:#a8320c;font-size:.82em;font-weight:600;
+}
+.content[data-content="0"] .porichoy-subheading{
+  margin:1.45rem 0 .55rem;padding:0 0 0 .7rem;border:0;border-inline-start:2px solid #8ba4a2;
+  background:transparent;color:#315e63;font-size:1.05rem;font-weight:600;line-height:1.55;
+}
+.content[data-content="0"] .porichoy-reflection-heading{border-inline-start-color:#bd6b40;color:#8a3718}
+.content[data-content="0"] p.porichoy-question{
+  margin:1.25rem 0 .35rem;padding:.55rem .8rem;border-inline-start:3px solid #bd6b40;
+  border-radius:0 4px 4px 0;background:#fbf5ec;color:#713516;font-size:1.02em;
+}
+.content[data-content="0"] p.porichoy-question + p{margin-top:.25rem;padding-inline-start:.9rem;border-inline-start:1px solid #e4d7c8}
+.content[data-content="0"] p.porichoy-flow-step{margin:1rem 0 .35rem;padding:.6rem .8rem;border:1px solid #d8e1e2;border-radius:4px;background:#f4f8f8;color:#244f60}
+.content[data-content="0"] p.porichoy-definition{margin:.4rem 0;padding:.5rem .8rem;border-bottom:1px solid #e9e2d9;background:#fcfaf6}
+.content[data-content="0"] .porichoy-definition strong{color:#8f3d1d}
+.content[data-content="0"] blockquote.porichoy-scripture-quote{
+  margin:1.1rem 0 1.3rem;padding:1rem clamp(1rem,3vw,1.5rem);border:1px solid #d5e0e2;
+  border-inline-start:3px solid #497285;border-radius:4px;background:#f4f8f8;color:#17556f;
+}
+.content[data-content="0"] p.porichoy-thesis{margin:1.4rem 0;padding:1rem 1.15rem;border-inline-start:3px solid #497285;background:#f1f6f7;color:#234b5e;font-size:1.08em;font-weight:500}
+.content[data-content="0"] ol.porichoy-takeaways{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem 1rem;margin:1rem 0 1.5rem;padding:0;list-style:none;counter-reset:porichoy-takeaway}
+.content[data-content="0"] ol.porichoy-takeaways li{position:relative;min-height:3.1rem;margin:0;padding:.72rem .85rem .72rem 2.8rem;border:1px solid #e6ddd1;border-radius:4px;background:#fcfaf6;counter-increment:porichoy-takeaway}
+.content[data-content="0"] ol.porichoy-takeaways li::before{content:counter(porichoy-takeaway,"bengali-numerals");position:absolute;inset-inline-start:.75rem;top:.68rem;color:#a8320c;font-weight:600}
+@media(max-width:640px){
+  .content[data-content="0"] .porichoy-chapter-heading{grid-template-columns:1.8rem minmax(0,1fr);gap:.5rem;margin-top:1.8rem;font-size:1.22rem}
+  .content[data-content="0"] ol.porichoy-takeaways{grid-template-columns:1fr;gap:.4rem}
+}
 @counter-style bengali-numerals{system:numeric;symbols:"০" "১" "২" "৩" "৪" "৫" "৬" "৭" "৮" "৯";suffix:". "}
 @media print{
   .content .intro-lead,.content .intro-note,.content .intro-verse{background:#fff;break-inside:avoid}
