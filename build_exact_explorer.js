@@ -10,23 +10,34 @@ const chotushlokiArticlePath = "articles/chotushloki-bhagavat.html";
 const chotushlokiMarkdown = fs.readFileSync(path.join(__dirname, "..", "porbo_2_chotushlokyio_bhagawat.md"), "utf8").replace(/\r\n/g, "\n");
 const krishnaVishnuArticlePath = "articles/krishna-vishnu-tattva.html";
 const krishnaVishnuMarkdown = fs.readFileSync(path.join(__dirname, "..", "porbo_3_Krishna_Vishtu_totto.md"), "utf8").replace(/\r\n/g, "\n");
+const choturdoshBhobanArticlePath = "articles/choturdosh-bhoban.html";
+const choturdoshBhobanMarkdown = fs.readFileSync(path.join(__dirname, "..", "porbo_4_choturdosh_bhoban.md"), "utf8").replace(/\r\n/g, "\n");
+const shibtottoArticlePath = "articles/brahma-shiva-shakti-tattva.html";
+const shibtottoMarkdown = fs.readFileSync(path.join(__dirname, "..", "porbo_5_shibtatto.md"), "utf8").replace(/\r\n/g, "\n");
+const krishnaShaktiArticlePath = "articles/krishna-shakti-tattva.html";
+const krishnaShaktiMarkdown = fs.readFileSync(path.join(__dirname, "..", "porbo_6_krishna_shakti_totto.md"), "utf8").replace(/\r\n/g, "\n");
 
 function parseBlogArticle(markdown, filename) {
   const lines = markdown.trimEnd().split("\n");
-  const title = lines[0]?.match(/^#\s+(.+)$/)?.[1];
-  const deck = lines[1]?.match(/^###\s+(.+)$/)?.[1];
-  const divider = lines.findIndex((line, index) => index > 1 && /^\s*---+\s*$/.test(line));
+  const titleIndex = lines.findIndex(line => /^#\s+/.test(line));
+  const title = lines[titleIndex]?.match(/^#\s+(.+)$/)?.[1];
+  const deckIndex = lines.findIndex((line, index) => index > titleIndex && /^###\s+/.test(line));
+  const deck = lines[deckIndex]?.match(/^###\s+(.+)$/)?.[1];
+  const divider = lines.findIndex((line, index) => index > deckIndex && /^\s*---+\s*$/.test(line));
   if (!title || !deck || divider < 0) throw new Error(`Blog article header is incomplete: ${filename}`);
   return {
     title,
     deck,
-    metadata: lines.slice(2, divider).filter(line => line.trim()),
+    metadata: lines.slice(deckIndex + 1, divider).filter(line => line.trim()),
     body: lines.slice(divider + 1).join("\n"),
   };
 }
 
 const chotushlokiArticle = parseBlogArticle(chotushlokiMarkdown, "porbo_2_chotushlokyio_bhagawat.md");
 const krishnaVishnuArticle = parseBlogArticle(krishnaVishnuMarkdown, "porbo_3_Krishna_Vishtu_totto.md");
+const choturdoshBhobanArticle = parseBlogArticle(choturdoshBhobanMarkdown, "porbo_4_choturdosh_bhoban.md");
+const shibtottoArticle = parseBlogArticle(shibtottoMarkdown, "porbo_5_shibtatto.md");
+const krishnaShaktiArticle = parseBlogArticle(krishnaShaktiMarkdown, "porbo_6_krishna_shakti_totto.md");
 
 function parseFrontmatter(markdown, filename) {
   const match = markdown.match(/^---\n([\s\S]*?)\n---\n/);
@@ -675,6 +686,7 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
   const skandhaStops = [];
   const headingIdCounts = new Map();
   let currentSection = "";
+  let currentSubsection = "";
   let i = 0;
 
   while (i < lines.length) {
@@ -721,6 +733,10 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
       const headingText = preserveSource ? heading[2] : withoutEmoji(heading[2]);
       const clean = headingText.replace(/\*\*/g, "").trim();
       if (prefix === "porichoy" && heading[1].length === 2) currentSection = clean;
+      if (prefix === "porbo4" && heading[1].length === 2) { currentSection = clean; currentSubsection = ""; }
+      if (prefix === "porbo4" && heading[1].length === 3) currentSubsection = clean;
+      if (prefix === "shibtotto" && heading[1].length === 2) currentSection = clean;
+      if (prefix === "krishnashakti" && heading[1].length === 2) currentSection = clean;
       const baseId = slugify(clean, prefix);
       const headingIdCount = (headingIdCounts.get(baseId) || 0) + 1;
       headingIdCounts.set(baseId, headingIdCount);
@@ -756,6 +772,10 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
           out.push(`<h${level} id="${id}"${introClass}>${renderInline(displayTitle)}</h${level}>`);
         }
       }
+      if (prefix === "shibtotto" && heading[1].length === 2 && clean.startsWith("১৬.")) out.push(renderMayaContrastChart());
+      if (prefix === "shibtotto" && heading[1].length === 2 && clean.startsWith("২৪.")) out.push(renderBrahmaShivaOverviewMap());
+      if (prefix === "krishnashakti" && heading[1].length === 2 && clean.startsWith("১.")) out.push(renderAchintyaRelationMap());
+      if (prefix === "krishnashakti" && heading[1].length === 2 && clean.startsWith("২৩.")) out.push(renderMayaContrastChart());
       i++;
       continue;
     }
@@ -774,6 +794,26 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
       }
       const header = rows[0];
       const body = rows.slice(2);
+      if (prefix === "porbo4" && currentSection.startsWith("৫.") && header[0] === "যুগ" && body.length === 5) {
+        out.push(renderYugaDurationChart(header, body, renderInline));
+        continue;
+      }
+      if (prefix === "porbo4" && currentSection.startsWith("১৭.") && header[0] === "প্রলয়ের প্রকার" && body.length === 4) {
+        out.push(renderPralayaComparison(header, body, renderInline));
+        continue;
+      }
+      if (prefix === "shibtotto" && currentSection.startsWith("২৩.") && header[0] === "বিষয়" && body.length === 6) {
+        out.push(renderBrahmaShivaComparison(header, body, renderInline));
+        continue;
+      }
+      if (prefix === "krishnashakti" && currentSection.startsWith("১৭.") && header[0] === "শক্তি" && body.length === 3) {
+        out.push(renderShaktiFunctionChart(header, body, renderInline));
+        continue;
+      }
+      if (prefix === "krishnashakti" && currentSection.startsWith("২২.") && header[0] === "বিষয়" && body.length === 5) {
+        out.push(renderEnergyComparison(header, body, renderInline));
+        continue;
+      }
       out.push(`<div class="table-wrap"><table><thead><tr>${header.map(c => `<th>${renderInline(c)}</th>`).join("")}</tr></thead><tbody>${body.map(r => `<tr>${r.map(c => `<td>${renderInline(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
       continue;
     }
@@ -815,8 +855,20 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
         items.push(lines[i].replace(/^[0-9০-৯]+\.\s+/, ""));
         i++;
       }
-      const listClasses = [bengaliNumbering ? "bn-numbered-list" : "", prefix === "porichoy" && currentSection === "এই পর্ব থেকে আমাদের প্রধান শিক্ষা" ? "porichoy-takeaways" : ""].filter(Boolean).join(" ");
-      out.push(`<ol${listClasses ? ` class="${listClasses}"` : ""}>${items.map(x => `<li>${renderInline(x)}</li>`).join("")}</ol>`);
+      const worldList = prefix === "porbo4" && currentSection.startsWith("১.")
+        ? currentSubsection === "সাতটি ঊর্ধ্বলোক" ? "upper" : currentSubsection === "সাতটি অধোলোক" ? "lower" : ""
+        : "";
+      if (worldList && items.length === 7) {
+        const label = worldList === "upper" ? "সাতটি ঊর্ধ্বলোক" : "সাতটি অধোলোক";
+        out.push(`<figure class="cosmology-world-figure cosmology-world-${worldList}" aria-label="${label}"><ol class="cosmology-world-list">${items.map((item, index) => `<li><span class="cosmology-world-number">${toBengaliDigits(index + 1)}</span><span>${renderInline(item)}</span></li>`).join("")}</ol></figure>`);
+      } else if (prefix === "shibtotto" && currentSection.startsWith("২৫.") && items.length === 3) {
+        out.push(renderShaktiCategories(items, renderInline));
+      } else if (prefix === "krishnashakti" && currentSection.startsWith("২.") && items.length === 3) {
+        out.push(renderThreeEnergiesMap(items, renderInline));
+      } else {
+        const listClasses = [bengaliNumbering ? "bn-numbered-list" : "", prefix === "porichoy" && currentSection === "এই পর্ব থেকে আমাদের প্রধান শিক্ষা" ? "porichoy-takeaways" : ""].filter(Boolean).join(" ");
+        out.push(`<ol${listClasses ? ` class="${listClasses}"` : ""}>${items.map(x => `<li>${renderInline(x)}</li>`).join("")}</ol>`);
+      }
       continue;
     }
 
@@ -909,6 +961,75 @@ function addSkandhaNavigation(blocks, stops) {
   blocks.splice(overview, 0, `<nav class="skandha-links skandha-index" aria-label="স্কন্ধ ধরে পড়ুন"><p>স্কন্ধ ধরে পড়ুন</p><ul>${links.join("")}</ul></nav>`);
 }
 
+function toBengaliDigits(value) {
+  return String(value).replace(/[0-9]/g, digit => "০১২৩৪৫৬৭৮৯"[Number(digit)]);
+}
+
+function numericValue(text) {
+  return Number(text.replace(/\*\*/g, "").replace(/[০-৯]/g, digit => String("০১২৩৪৫৬৭৮৯".indexOf(digit))).replace(/[^0-9]/g, ""));
+}
+
+function renderYugaDurationChart(header, body, renderInline) {
+  const yugas = body.slice(0, 4);
+  const total = body[4];
+  const maximum = numericValue(yugas[0][1]);
+  const rows = yugas.map(([name, duration, trait], index) => {
+    const width = Math.round(numericValue(duration) / maximum * 100);
+    return `<li class="yuga-chart-row"><div class="yuga-chart-label"><span>${toBengaliDigits(index + 1)}</span><strong>${renderInline(name)}</strong></div><div class="yuga-chart-measure"><div class="yuga-chart-track"><span style="--yuga-width:${width}%"></span></div><strong>${renderInline(duration)}</strong></div><p>${renderInline(trait)}</p></li>`;
+  }).join("");
+  return `<figure class="cosmology-yuga-chart" aria-label="চার যুগের সময়কালের তুলনামূলক চিত্র"><p class="yuga-chart-key">${header.map(renderInline).join(" · ")}</p><ol>${rows}</ol><figcaption><span>আপেক্ষিক সময়কাল</span><strong>৪ : ৩ : ২ : ১</strong></figcaption><p class="yuga-chart-total"><span class="yuga-chart-total-label">${renderInline(total[0])}</span><span>${renderInline(total[1])}</span><span>${renderInline(total[2])}</span></p></figure>`;
+}
+
+function renderPralayaComparison(header, body, renderInline) {
+  const cards = body.map(([kind, when, meaning], index) => `<li class="pralaya-card"><span class="pralaya-card-number">${toBengaliDigits(index + 1)}</span><h4>${renderInline(kind)}</h4><dl><div><dt>${renderInline(header[1])}</dt><dd>${renderInline(when)}</dd></div><div><dt>${renderInline(header[2])}</dt><dd>${renderInline(meaning)}</dd></div></dl></li>`).join("");
+  return `<figure class="cosmology-pralaya-chart" aria-label="চার প্রকার প্রলয়ের তুলনামূলক চিত্র"><ol>${cards}</ol></figure>`;
+}
+
+function renderBrahmaShivaComparison(header, body, renderInline) {
+  const rows = body.map(([topic, brahma, shiva], index) => `<li class="shibtotto-compare-row"><h4><span>${toBengaliDigits(index + 1)}</span>${renderInline(topic)}</h4><div><dt>${renderInline(header[1])}</dt><dd>${renderInline(brahma)}</dd></div><div><dt>${renderInline(header[2])}</dt><dd>${renderInline(shiva)}</dd></div></li>`).join("");
+  return `<figure class="shibtotto-compare-chart" aria-label="ব্রহ্মা ও শিবের তাত্ত্বিক অবস্থানের তুলনা"><ol>${rows}</ol><figcaption>${header.map(renderInline).join(" · ")}</figcaption></figure>`;
+}
+
+function renderMayaContrastChart() {
+  return `<figure class="maya-contrast-chart" aria-label="মহামায়া ও যোগমায়ার কার্যগত পার্থক্য"><div class="maya-chart-node maya-chart-source"><span>শক্তির পরম উৎস</span><strong>ভগবান</strong></div><div class="maya-chart-branches"><section><span>বহিরঙ্গা শক্তি</span><h4>মহামায়া</h4><p>জড়বন্ধন, জড়জগতের গুণ ও কর্মফলের ব্যবস্থা</p></section><section><span>অন্তরঙ্গা শক্তি</span><h4>যোগমায়া</h4><p>ভগবানের দিব্য লীলা ও অন্তরঙ্গ সম্পর্কের প্রকাশ</p></section></div><figcaption>কার্যক্ষেত্র আলাদা; উভয় শক্তির পরম উৎস একই ভগবান।</figcaption></figure>`;
+}
+
+function renderBrahmaShivaOverviewMap() {
+  return `<figure class="shibtotto-overview-map" aria-label="বিষ্ণু, ব্রহ্মা, শিব ও দুর্গাশক্তির সম্পর্কের মানচিত্র"><div class="shibtotto-map-source"><span>স্বয়ং ভগবান</span><strong>শ্রীকৃষ্ণ</strong></div><div class="shibtotto-map-link" aria-hidden="true">রূপ, কার্য ও শক্তির সম্পর্ক</div><div class="shibtotto-map-branches"><section><h4>নারায়ণ ও তিন পুরুষাবতার</h4><p>সৃষ্টির সামগ্রিক প্রকাশ, ব্রহ্মাণ্ডের অভ্যন্তরীণ আশ্রয় ও অন্তর্যামী কার্য</p><span>দিব্য বিস্তার</span></section><section><h4>ব্রহ্মা</h4><p>ভগবানের শক্তিতে সৃষ্টির পরবর্তী বিন্যাস</p><span>জীবতত্ত্বের সঙ্গে সম্পর্কিত</span></section><section><h4>রুদ্র / শিব</h4><p>জড়সৃষ্টির সংহার ও লয়ের সঙ্গে সম্পর্কিত</p><span>বিশেষ শিবতত্ত্ব</span></section><section><h4>দুর্গা / মহামায়া</h4><p>জড়প্রকৃতির কার্য পরিচালনাকারী শক্তি</p><span>বহিরঙ্গা শক্তি</span></section></div><figcaption>এটি পদমর্যাদার তালিকা নয়; ভিন্ন তত্ত্বের রূপ, কার্য ও শক্তির সম্পর্ক দেখানো হয়েছে।</figcaption></figure>`;
+}
+
+function renderShaktiCategories(items, renderInline) {
+  const details = [
+    "ভগবানের নিত্যধাম, দিব্য লীলা ও প্রেমময় সম্পর্ক",
+    "জড়প্রকৃতি ও মহামায়ার সঙ্গে সম্পর্কিত",
+    "জীবাত্মার সঙ্গে সম্পর্কিত",
+  ];
+  return `<figure class="shibtotto-shakti-chart" aria-label="ভগবানের শক্তির তিনটি শ্রেণি"><ol>${items.map((item, index) => `<li><span>${toBengaliDigits(index + 1)}</span><h4>${renderInline(item)}</h4><p>${details[index]}</p></li>`).join("")}</ol><figcaption>সমস্ত শক্তির পরম উৎস ভগবান।</figcaption></figure>`;
+}
+
+function renderAchintyaRelationMap() {
+  return `<figure class="krishna-shakti-relation-map" aria-label="শক্তিমান ও শক্তির অচিন্ত্যভেদাভেদ সম্পর্ক"><div class="relation-map-title">শক্তিমান ও শক্তির সম্পর্ক</div><div class="relation-map-center">অচিন্ত্যভেদাভেদ</div><div class="relation-map-poles"><section><span>অভেদ</span><p>শক্তি ভগবান থেকে সম্পূর্ণ স্বাধীন নয়।</p></section><section><span>ভেদ</span><p>শক্তি ও শক্তিমানের পরিচয় এবং কার্য একেবারে সমার্থক নয়।</p></section></div><figcaption>এই ভেদাভেদের সম্পূর্ণ প্রকৃতি সাধারণ জড়যুক্তির দ্বারা নিঃশেষে উপলব্ধি করা যায় না।</figcaption></figure>`;
+}
+
+function renderThreeEnergiesMap(items, renderInline) {
+  const notes = [
+    "নিত্যধাম, দিব্য লীলা ও প্রেমময় সম্পর্ক",
+    "জীবশক্তি · জীবাত্মা; চৈতন্যময়, অণু",
+    "মায়াশক্তি · জড়প্রকৃতি, তার পরিবর্তন ও কার্য",
+  ];
+  return `<figure class="krishna-shakti-energy-map" aria-label="শ্রীকৃষ্ণের তিন প্রধান শক্তির মানচিত্র"><div class="energy-map-source"><span>পরম শক্তিমান</span><strong>শ্রীকৃষ্ণ</strong></div><div class="energy-map-connector" aria-hidden="true">শক্তির প্রকাশ</div><ol>${items.map((item, index) => `<li class="energy-map-branch energy-map-branch-${index + 1}"><span>${toBengaliDigits(index + 1)}</span><h4>${renderInline(item.replace(/^[0-9০-৯]+\.\s*/, ""))}</h4><p>${notes[index]}</p></li>`).join("")}</ol><figcaption>অসীম শক্তিকে বোঝার সুবিধার্থে তিনটি প্রধান শ্রেণিতে আলোচনা করা হয়।</figcaption></figure>`;
+}
+
+function renderShaktiFunctionChart(header, body, renderInline) {
+  const cards = body.map(([name, relation, meaning], index) => `<li class="shakti-function-card shakti-function-${index + 1}"><span>${toBengaliDigits(index + 1)}</span><h4>${renderInline(name)}</h4><p class="shakti-function-relation">${renderInline(relation)}</p><p>${renderInline(meaning)}</p></li>`).join("");
+  return `<figure class="krishna-shakti-function-chart" aria-label="সন্ধিনী, সম্বিৎ ও হ্লাদিনী শক্তির তুলনা"><p class="function-chart-key">${header.map(renderInline).join(" · ")}</p><ol>${cards}</ol><figcaption>তিনটি পৃথক বস্তু নয়; এক অখণ্ড অন্তরঙ্গা শক্তির বিভিন্ন কার্যপ্রকাশ।</figcaption></figure>`;
+}
+
+function renderEnergyComparison(header, body, renderInline) {
+  const columns = header.slice(1).map((name, index) => `<section class="energy-comparison-column energy-comparison-${index + 1}"><h4>${renderInline(name)}</h4>${body.map(([topic, ...values]) => `<div><span>${renderInline(topic)}</span><p>${renderInline(values[index])}</p></div>`).join("")}</section>`).join("");
+  return `<figure class="krishna-shakti-comparison" aria-label="অন্তরঙ্গা, তটস্থা ও বহিরঙ্গা শক্তির তুলনামূলক চিত্র"><div class="energy-comparison-keys"><span>${header.map(renderInline).join(" · ")}</span></div><div class="energy-comparison-columns">${columns}</div></figure>`;
+}
+
 function renderStoryRows(skandha) {
   let currentGroup = "";
   return skandha.stories.map(story => {
@@ -958,11 +1079,23 @@ function renderKrishnaVishnuCard() {
   return `<article class="lesson-entry" id="krishna-vishnu-article-entry" data-lesson-entry><a class="lesson-open article-link" href="${krishnaVishnuArticlePath}"><span class="lesson-mark" aria-hidden="true">◆</span><span class="lesson-card-body"><span class="lesson-card-kicker">ধারাবাহিক পাঠ · পর্ব ৩</span><strong class="lesson-card-title">${inline(krishnaVishnuArticle.title, true)}</strong><span class="lesson-card-reference">${inline(krishnaVishnuArticle.metadata[0] || "", true)}</span><span class="lesson-card-teaching">${inline(krishnaVishnuArticle.deck, true)}</span></span><span class="lesson-card-arrow" aria-hidden="true">পড়ুন →</span></a></article>`;
 }
 
+function renderChoturdoshBhobanCard() {
+  return `<article class="lesson-entry" id="choturdosh-bhoban-article-entry" data-lesson-entry><a class="lesson-open article-link" href="${choturdoshBhobanArticlePath}"><span class="lesson-mark" aria-hidden="true">◆</span><span class="lesson-card-body"><span class="lesson-card-kicker">ধারাবাহিক পাঠ · পর্ব ৪</span><strong class="lesson-card-title">${inline(choturdoshBhobanArticle.title, true)}</strong><span class="lesson-card-reference">চতুর্দশ ভুবন · যুগচক্র · মন্বন্তর · প্রলয়</span><span class="lesson-card-teaching">${inline(choturdoshBhobanArticle.deck, true)}</span></span><span class="lesson-card-arrow" aria-hidden="true">পড়ুন →</span></a></article>`;
+}
+
+function renderShibtottoCard() {
+  return `<article class="lesson-entry" id="shibtotto-article-entry" data-lesson-entry><a class="lesson-open article-link" href="${shibtottoArticlePath}"><span class="lesson-mark" aria-hidden="true">◆</span><span class="lesson-card-body"><span class="lesson-card-kicker">ধারাবাহিক পাঠ · পর্ব ৫</span><strong class="lesson-card-title">${inline(shibtottoArticle.title, true)}</strong><span class="lesson-card-reference">ব্রহ্মা · শিবতত্ত্ব · দুর্গাশক্তি · মহামায়া ও যোগমায়া</span><span class="lesson-card-teaching">${inline(shibtottoArticle.deck, true)}</span></span><span class="lesson-card-arrow" aria-hidden="true">পড়ুন →</span></a></article>`;
+}
+
+function renderKrishnaShaktiCard() {
+  return `<article class="lesson-entry" id="krishna-shakti-article-entry" data-lesson-entry><a class="lesson-open article-link" href="${krishnaShaktiArticlePath}"><span class="lesson-mark" aria-hidden="true">◆</span><span class="lesson-card-body"><span class="lesson-card-kicker">ধারাবাহিক পাঠ · পর্ব ৬</span><strong class="lesson-card-title">${inline(krishnaShaktiArticle.title, true)}</strong><span class="lesson-card-reference">অন্তরঙ্গা · তটস্থা · বহিরঙ্গা · সন্ধিনী · সম্বিৎ · হ্লাদিনী</span><span class="lesson-card-teaching">${inline(krishnaShaktiArticle.deck, true)}</span></span><span class="lesson-card-arrow" aria-hidden="true">পড়ুন →</span></a></article>`;
+}
+
 function renderDetailedLessons() {
   const articleCard = `<article class="lesson-entry" id="${vishnuArticle.entryId}" data-lesson-entry><a class="lesson-open article-link" href="${vishnuArticle.articlePath}"><span class="lesson-mark" aria-hidden="true">◆</span><span class="lesson-card-body"><span class="lesson-card-kicker">সচিত্র ধারাবাহিক পাঠ</span><strong class="lesson-card-title">${escapeHtml(vishnuArticle.title)}</strong><span class="lesson-card-reference">৮টি পর্ব · সৃষ্টি ও সময়চক্র · শিব ও শক্তিতত্ত্ব</span><span class="lesson-card-teaching">কৃষ্ণ, নারায়ণ ও তিন বিষ্ণুর সম্পর্ক থেকে চতুর্দশ ভুবন, যুগ–মন্বন্তর–কল্প, সদাশিব ও রুদ্র—সারণি ও ছবিসহ বিস্তৃত আলোচনা।</span></span><span class="lesson-card-arrow" aria-hidden="true">পড়ুন →</span></a></article>`;
   const detailedLessonCards = detailedLessons.map(renderDetailedLessonCard).join("");
   // Keep the numbered reading series first, followed by thematic essays; story-specific lessons remain last.
-  const cards = [renderChotushlokiCard(), renderKrishnaVishnuCard(), articleCard, detailedLessonCards].join("");
+  const cards = [renderChotushlokiCard(), renderKrishnaVishnuCard(), renderChoturdoshBhobanCard(), renderShibtottoCard(), renderKrishnaShaktiCard(), articleCard, detailedLessonCards].join("");
   return `<header class="detailed-lessons-header"><p><span aria-hidden="true">◆</span> পূর্ণাঙ্গ অধ্যয়ন</p><h2 id="detailed-lessons-title">বিশদ পাঠ</h2><p>নির্বাচিত প্রসঙ্গের বিস্তৃত পাঠ, ব্যাখ্যা ও জীবনে প্রয়োগ—একটি ক্রমবর্ধমান পাঠাগার।</p></header><section class="detailed-lessons" aria-labelledby="lesson-index-title"><div class="section-rule"><span>পাঠাগার</span></div><h3 id="lesson-index-title">সকল বিশদ পাঠ</h3><label class="lesson-search-label"><span class="sr-only">বিশদ পাঠ খুঁজুন</span><input id="lesson-search" type="search" placeholder="শিরোনাম, বক্তা বা বিষয় খুঁজুন..." autocomplete="off"></label><div class="lesson-list">${cards}</div><p class="lesson-empty" hidden>এই শব্দে কোনো বিশদ পাঠ পাওয়া যায়নি।</p></section>`;
 }
 
@@ -1002,6 +1135,66 @@ function renderStandaloneKrishnaVishnuArticle() {
 <html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} | শ্রীমদ্ভাগবত কথা</title><meta name="description" content="${escapeHtml(krishnaVishnuArticle.deck)}"><meta name="theme-color" content="#f8f6f1"><link rel="stylesheet" href="../assets/article.css"></head>
 <body><a class="skip-link" href="#article">মূল লেখায় যান</a><div class="reading-progress" aria-hidden="true"></div><header class="article-topbar"><a href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">← বিশদ পাঠে ফিরুন</a><a class="site-name" href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">শ্রীমদ্ভাগবত কথা</a><a href="#contents">সূচিপত্র</a></header>
 <header class="article-hero"><p class="eyebrow">বিশদ পাঠ · পর্ব ৩</p><h1>${title}</h1><p class="article-deck">${deck}</p><div class="article-meta-lines">${metadata}</div></header>
+<main class="article-layout"><aside class="article-toc" id="contents" aria-label="পাঠের সূচিপত্র"><details open><summary>এই পাঠের সূচি</summary><nav>${tocItems}</nav></details></aside><article id="article"><div class="article-part">${renderedArticle.html}</div><footer class="article-end"><p>এই পাঠটি শেষ করেছেন?</p><a href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">← বিশদ পাঠে ফিরে যান</a></footer></article></main>
+<script>const progress=document.querySelector('.reading-progress');function updateProgress(){const root=document.documentElement;const available=root.scrollHeight-root.clientHeight;progress.style.width=(available>0?root.scrollTop/available*100:0)+'%'}addEventListener('scroll',updateProgress,{passive:true});updateProgress();</script></body></html>`;
+}
+
+function renderStandaloneChoturdoshBhobanArticle() {
+  const prefix = "porbo4";
+  const renderedArticle = markdownToHtml(choturdoshBhobanArticle.body, prefix, { preserveSource: true });
+  const tocItems = renderedArticle.nav.filter(item => item.level === 2).map(item => {
+    const numbered = item.title.match(/^([০-৯]+\.)\s*(.*)$/u);
+    const number = numbered ? inline(numbered[1], true) : "·";
+    const title = numbered ? numbered[2] : item.title;
+    return `<a href="#${item.id}"><span>${number}</span>${inline(title, true)}</a>`;
+  }).join("");
+  const metadata = choturdoshBhobanArticle.metadata.map(line => `<p>${inline(line, true)}</p>`).join("");
+  const title = inline(choturdoshBhobanArticle.title, true);
+  const deck = inline(choturdoshBhobanArticle.deck, true);
+  return `<!DOCTYPE html>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} | শ্রীমদ্ভাগবত কথা</title><meta name="description" content="${escapeHtml(choturdoshBhobanArticle.deck)}"><meta name="theme-color" content="#f8f6f1"><link rel="stylesheet" href="../assets/article.css"></head>
+<body><a class="skip-link" href="#article">মূল লেখায় যান</a><div class="reading-progress" aria-hidden="true"></div><header class="article-topbar"><a href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">← বিশদ পাঠে ফিরুন</a><a class="site-name" href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">শ্রীমদ্ভাগবত কথা</a><a href="#contents">সূচিপত্র</a></header>
+<header class="article-hero"><p class="eyebrow">বিশদ পাঠ · পর্ব ৪</p><h1>${title}</h1><p class="article-deck">${deck}</p><div class="article-meta-lines">${metadata}</div></header>
+<main class="article-layout"><aside class="article-toc" id="contents" aria-label="পাঠের সূচিপত্র"><details open><summary>এই পাঠের সূচি</summary><nav>${tocItems}</nav></details></aside><article id="article"><div class="article-part">${renderedArticle.html}</div><footer class="article-end"><p>এই পাঠটি শেষ করেছেন?</p><a href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">← বিশদ পাঠে ফিরে যান</a></footer></article></main>
+<script>const progress=document.querySelector('.reading-progress');function updateProgress(){const root=document.documentElement;const available=root.scrollHeight-root.clientHeight;progress.style.width=(available>0?root.scrollTop/available*100:0)+'%'}addEventListener('scroll',updateProgress,{passive:true});updateProgress();</script></body></html>`;
+}
+
+function renderStandaloneShibtottoArticle() {
+  const prefix = "shibtotto";
+  const renderedArticle = markdownToHtml(shibtottoArticle.body, prefix, { preserveSource: true });
+  const tocItems = renderedArticle.nav.filter(item => item.level === 2).map(item => {
+    const numbered = item.title.match(/^([০-৯]+\.)\s*(.*)$/u);
+    const number = numbered ? inline(numbered[1], true) : "·";
+    const title = numbered ? numbered[2] : item.title;
+    return `<a href="#${item.id}"><span>${number}</span>${inline(title, true)}</a>`;
+  }).join("");
+  const metadata = shibtottoArticle.metadata.map(line => `<p>${inline(line, true)}</p>`).join("");
+  const title = inline(shibtottoArticle.title, true);
+  const deck = inline(shibtottoArticle.deck, true);
+  return `<!DOCTYPE html>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} | শ্রীমদ্ভাগবত কথা</title><meta name="description" content="${escapeHtml(shibtottoArticle.deck)}"><meta name="theme-color" content="#f8f6f1"><link rel="stylesheet" href="../assets/article.css"></head>
+<body><a class="skip-link" href="#article">মূল লেখায় যান</a><div class="reading-progress" aria-hidden="true"></div><header class="article-topbar"><a href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">← বিশদ পাঠে ফিরুন</a><a class="site-name" href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">শ্রীমদ্ভাগবত কথা</a><a href="#contents">সূচিপত্র</a></header>
+<header class="article-hero"><p class="eyebrow">বিশদ পাঠ · পর্ব ৫</p><h1>${title}</h1><p class="article-deck">${deck}</p><div class="article-meta-lines">${metadata}</div></header>
+<main class="article-layout"><aside class="article-toc" id="contents" aria-label="পাঠের সূচিপত্র"><details open><summary>এই পাঠের সূচি</summary><nav>${tocItems}</nav></details></aside><article id="article"><div class="article-part">${renderedArticle.html}</div><footer class="article-end"><p>এই পাঠটি শেষ করেছেন?</p><a href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">← বিশদ পাঠে ফিরে যান</a></footer></article></main>
+<script>const progress=document.querySelector('.reading-progress');function updateProgress(){const root=document.documentElement;const available=root.scrollHeight-root.clientHeight;progress.style.width=(available>0?root.scrollTop/available*100:0)+'%'}addEventListener('scroll',updateProgress,{passive:true});updateProgress();</script></body></html>`;
+}
+
+function renderStandaloneKrishnaShaktiArticle() {
+  const prefix = "krishnashakti";
+  const renderedArticle = markdownToHtml(krishnaShaktiArticle.body, prefix, { preserveSource: true });
+  const tocItems = renderedArticle.nav.filter(item => item.level === 2).map(item => {
+    const numbered = item.title.match(/^([০-৯]+\.)\s*(.*)$/u);
+    const number = numbered ? inline(numbered[1], true) : "·";
+    const title = numbered ? numbered[2] : item.title;
+    return `<a href="#${item.id}"><span>${number}</span>${inline(title, true)}</a>`;
+  }).join("");
+  const metadata = krishnaShaktiArticle.metadata.map(line => `<p>${inline(line, true)}</p>`).join("");
+  const title = inline(krishnaShaktiArticle.title, true);
+  const deck = inline(krishnaShaktiArticle.deck, true);
+  return `<!DOCTYPE html>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} | শ্রীমদ্ভাগবত কথা</title><meta name="description" content="${escapeHtml(krishnaShaktiArticle.deck)}"><meta name="theme-color" content="#f8f6f1"><link rel="stylesheet" href="../assets/article.css"></head>
+<body><a class="skip-link" href="#article">মূল লেখায় যান</a><div class="reading-progress" aria-hidden="true"></div><header class="article-topbar"><a href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">← বিশদ পাঠে ফিরুন</a><a class="site-name" href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">শ্রীমদ্ভাগবত কথা</a><a href="#contents">সূচিপত্র</a></header>
+<header class="article-hero"><p class="eyebrow">বিশদ পাঠ · পর্ব ৬</p><h1>${title}</h1><p class="article-deck">${deck}</p><div class="article-meta-lines">${metadata}</div></header>
 <main class="article-layout"><aside class="article-toc" id="contents" aria-label="পাঠের সূচিপত্র"><details open><summary>এই পাঠের সূচি</summary><nav>${tocItems}</nav></details></aside><article id="article"><div class="article-part">${renderedArticle.html}</div><footer class="article-end"><p>এই পাঠটি শেষ করেছেন?</p><a href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">← বিশদ পাঠে ফিরে যান</a></footer></article></main>
 <script>const progress=document.querySelector('.reading-progress');function updateProgress(){const root=document.documentElement;const available=root.scrollHeight-root.clientHeight;progress.style.width=(available>0?root.scrollTop/available*100:0)+'%'}addEventListener('scroll',updateProgress,{passive:true});updateProgress();</script></body></html>`;
 }
@@ -1048,6 +1241,9 @@ rendered.push({
   nav: [
     { id: "chotushloki-article-entry", title: chotushlokiArticle.title },
     { id: "krishna-vishnu-article-entry", title: krishnaVishnuArticle.title },
+    { id: "choturdosh-bhoban-article-entry", title: choturdoshBhobanArticle.title },
+    { id: "shibtotto-article-entry", title: shibtottoArticle.title },
+    { id: "krishna-shakti-article-entry", title: krishnaShaktiArticle.title },
     { id: vishnuArticle.entryId, title: vishnuArticle.title },
     ...detailedLessons.map(lesson => ({ id: lesson.id, title: lesson.title })),
   ],
@@ -1765,10 +1961,16 @@ const chotushlokiHtml = renderStandaloneChotushlokiArticle();
 fs.writeFileSync(path.join(__dirname, chotushlokiArticlePath), chotushlokiHtml, "utf8");
 const krishnaVishnuHtml = renderStandaloneKrishnaVishnuArticle();
 fs.writeFileSync(path.join(__dirname, krishnaVishnuArticlePath), krishnaVishnuHtml, "utf8");
+const choturdoshBhobanHtml = renderStandaloneChoturdoshBhobanArticle();
+fs.writeFileSync(path.join(__dirname, choturdoshBhobanArticlePath), choturdoshBhobanHtml, "utf8");
+const shibtottoHtml = renderStandaloneShibtottoArticle();
+fs.writeFileSync(path.join(__dirname, shibtottoArticlePath), shibtottoHtml, "utf8");
+const krishnaShaktiHtml = renderStandaloneKrishnaShaktiArticle();
+fs.writeFileSync(path.join(__dirname, krishnaShaktiArticlePath), krishnaShaktiHtml, "utf8");
 const detailedLessonArticles = detailedLessons.map(lesson => {
   const articlePath = `articles/${lesson.id}.html`;
   const articleHtml = renderStandaloneDetailedLessonArticle(lesson);
   fs.writeFileSync(path.join(__dirname, articlePath), articleHtml, "utf8");
   return { path: articlePath, bytes: Buffer.byteLength(articleHtml) };
 });
-console.log(JSON.stringify({ chapters: rendered.length, detailedLessons: detailedLessons.length, standaloneArticles: [vishnuArticle.articlePath, chotushlokiArticlePath, krishnaVishnuArticlePath, ...detailedLessonArticles.map(article => article.path)], sourceCharacters: chapters.reduce((n,x)=>n+x.markdown.length,0) + chotushlokiMarkdown.length + krishnaVishnuMarkdown.length, outputBytes: Buffer.byteLength(html), chotushlokiBytes: Buffer.byteLength(chotushlokiHtml), krishnaVishnuBytes: Buffer.byteLength(krishnaVishnuHtml), detailedLessonArticles }, null, 2));
+console.log(JSON.stringify({ chapters: rendered.length, detailedLessons: detailedLessons.length, standaloneArticles: [vishnuArticle.articlePath, chotushlokiArticlePath, krishnaVishnuArticlePath, choturdoshBhobanArticlePath, shibtottoArticlePath, krishnaShaktiArticlePath, ...detailedLessonArticles.map(article => article.path)], sourceCharacters: chapters.reduce((n,x)=>n+x.markdown.length,0) + chotushlokiMarkdown.length + krishnaVishnuMarkdown.length + choturdoshBhobanMarkdown.length + shibtottoMarkdown.length + krishnaShaktiMarkdown.length, outputBytes: Buffer.byteLength(html), chotushlokiBytes: Buffer.byteLength(chotushlokiHtml), krishnaVishnuBytes: Buffer.byteLength(krishnaVishnuHtml), choturdoshBhobanBytes: Buffer.byteLength(choturdoshBhobanHtml), shibtottoBytes: Buffer.byteLength(shibtottoHtml), krishnaShaktiBytes: Buffer.byteLength(krishnaShaktiHtml), detailedLessonArticles }, null, 2));
