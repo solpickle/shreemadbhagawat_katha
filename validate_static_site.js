@@ -41,6 +41,9 @@ const articlePath = 'articles/vishnu-cosmology.html';
 assert(html.includes(`href="${articlePath}"`), 'Standalone article link is missing from the library');
 const chotushlokiPath = 'articles/chotushloki-bhagavat.html';
 assert(html.includes(`href="${chotushlokiPath}"`), 'চতুঃশ্লোকী standalone article link is missing from the library');
+const krishnaVishnuPath = 'articles/krishna-vishnu-tattva.html';
+assert(html.includes(`href="${krishnaVishnuPath}"`), 'কৃষ্ণ-বিষ্ণুতত্ত্ব standalone article link is missing from the library');
+assert(html.includes('ধারাবাহিক পাঠ · পর্ব ৩'), 'পর্ব ৩ article card is missing from বিশদ পাঠ');
 const chotushloki = fs.readFileSync(chotushlokiPath, 'utf8');
 assert(chotushloki.includes('<html lang="bn">'), 'চতুঃশ্লোকী article must use Bengali document language');
 assert(chotushloki.includes('পর্ব ২: চতুঃশ্লোকী ভাগবত'), 'চতুঃশ্লোকী article title is missing');
@@ -99,6 +102,35 @@ assert(articleCss.includes('@counter-style bengali-numerals'), 'Bengali ordered-
 const articleScript = article.match(/<script>([\s\S]*?)<\/script>/);
 new Function(articleScript[1]);
 
+const krishnaVishnu = fs.readFileSync(krishnaVishnuPath, 'utf8');
+assert(krishnaVishnu.includes('<html lang="bn">'), 'কৃষ্ণ-বিষ্ণুতত্ত্ব article must use Bengali document language');
+assert(krishnaVishnu.includes('পর্ব ৩: শ্রীকৃষ্ণ থেকে নারায়ণ ও তিন বিষ্ণু'), 'কৃষ্ণ-বিষ্ণুতত্ত্ব article title is missing');
+assert(krishnaVishnu.includes('গোলোক বৃন্দাবন থেকে অসংখ্য ব্রহ্মাণ্ড'), 'কৃষ্ণ-বিষ্ণুতত্ত্ব article deck is missing');
+assert(krishnaVishnu.includes('../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title'), 'কৃষ্ণ-বিষ্ণুতত্ত্ব return link is missing');
+for (const passage of ['কৃষ্ণস্তু ভগবান্ স্বয়ম্', 'যস্যৈকনিশ্বসিতকালমথাবলম্ব্য', 'ঈশ্বরঃ সর্বভূতানাং', 'শ্রীকৃষ্ণ — স্বয়ং ভগবান', 'ক্ষীরোদকশায়ী বিষ্ণু', 'এই বিন্যাস গৌড়ীয় বৈষ্ণব পরম্পরার একটি শিক্ষামূলক সংক্ষিপ্ত রূপ।', 'শাস্ত্রীয় সূত্র ও আরও পাঠ']) {
+  assert(krishnaVishnu.includes(passage), `কৃষ্ণ-বিষ্ণুতত্ত্ব article content is missing: ${passage}`);
+}
+assert((krishnaVishnu.match(/class="krishna-map-node(?:\s|\")/g) || []).length === 9, 'কৃষ্ণ-বিষ্ণুতত্ত্ব expansion map must contain all nine source nodes');
+assert((krishnaVishnu.match(/<table>/g) || []).length === 2, 'কৃষ্ণ-বিষ্ণুতত্ত্ব comparison tables are missing');
+assert((krishnaVishnu.match(/<blockquote/g) || []).length === 5, 'কৃষ্ণ-বিষ্ণুতত্ত্ব scripture quotations are missing');
+const krishnaVishnuIds = [...krishnaVishnu.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
+assert(new Set(krishnaVishnuIds).size === krishnaVishnuIds.length, 'Duplicate কৃষ্ণ-বিষ্ণুতত্ত্ব article anchor IDs');
+const krishnaVishnuToc = krishnaVishnu.match(/<aside class="article-toc"[\s\S]*?<nav>([\s\S]*?)<\/nav>/);
+assert(krishnaVishnuToc && (krishnaVishnuToc[1].match(/<a href="#krishnavishnu-section-/g) || []).length === 23, 'কৃষ্ণ-বিষ্ণুতত্ত্ব article table of contents is incomplete');
+const krishnaVishnuLinks = [...krishnaVishnu.matchAll(/(?:src|href)="([^"]+)"/g)].map(match => match[1]);
+krishnaVishnuLinks.forEach(link => {
+  if (/^https?:/.test(link)) return;
+  if (link.startsWith('#')) {
+    if (link.length > 1) assert(krishnaVishnuIds.includes(link.slice(1)), `কৃষ্ণ-বিষ্ণুতত্ত্ব article anchor target missing: ${link}`);
+    return;
+  }
+  const file = decodeURIComponent(link.split('#')[0]);
+  assert(fs.existsSync(path.resolve(path.dirname(krishnaVishnuPath), file)), `কৃষ্ণ-বিষ্ণুতত্ত্ব article asset or return target missing: ${link}`);
+});
+const krishnaVishnuScript = krishnaVishnu.match(/<script>([\s\S]*?)<\/script>/);
+assert(krishnaVishnuScript, 'কৃষ্ণ-বিষ্ণুতত্ত্ব reading progress script is missing');
+new Function(krishnaVishnuScript[1]);
+
 console.log(JSON.stringify({
   html: htmlPath,
   tabs: 6,
@@ -109,5 +141,6 @@ console.log(JSON.stringify({
   browserScriptSyntax: "valid",
   fonts: requiredFonts.length,
   chotushlokiArticle: { anchors: chotushlokiIds.length, verses: 4, links: 'valid' },
+  krishnaVishnuArticle: { anchors: krishnaVishnuIds.length, mapNodes: 9, comparisonTables: 2, scriptureQuotes: 5, links: 'valid' },
   standaloneArticle: { parts: 8, illustrations: articleImages, quizCards, repairedCaptions: figureContexts, numbering: 'Bengali', links: 'valid' },
 }, null, 2));
