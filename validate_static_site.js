@@ -28,7 +28,18 @@ assert(detailedLessons >= 1, "Expected at least one detailed lesson");
 assert(html.includes("ব্রহ্মার প্রার্থনা — কর্ম করব, কিন্তু কর্তার অহংকার যেন না আসে"), "Detailed lesson title is missing");
 assert(!html.includes("data-story-mode"), "বিশদ পাঠ must not remain nested under গল্প ও শিক্ষা");
 assert(html.includes("◆"), "Detailed-lesson importance mark is missing");
+assert(!html.includes('id="lesson-dialog"') && !html.includes('data-lesson="'), "Detailed lessons should open as independent articles, not dialogs");
 assert(!html.includes("ওয়েবসাইটে সংযোজনের নির্দেশ"), "Implementation instructions leaked into the website");
+const lessonList = html.match(/<div class="lesson-list">([\s\S]*?)<\/div><p class="lesson-empty"/);
+assert(lessonList, "বিশদ পাঠ list could not be located");
+const lessonListLinks = [...lessonList[1].matchAll(/href="(articles\/[^\"]+\.html)"/g)].map(match => match[1]);
+const orderIndexes = [
+  lessonListLinks.indexOf('articles/chotushloki-bhagavat.html'),
+  lessonListLinks.indexOf('articles/krishna-vishnu-tattva.html'),
+  lessonListLinks.indexOf('articles/vishnu-cosmology.html'),
+  lessonListLinks.findIndex(link => /lesson-s03-c09/.test(link)),
+];
+assert(orderIndexes.every(index => index >= 0) && orderIndexes.every((index, i) => i === 0 || orderIndexes[i - 1] < index), 'বিশদ পাঠ order must keep Parts 2–3 first, thematic readings next, and Brahma’s lesson last');
 
 const scriptMatch = html.match(/<script>([\s\S]*)<\/script>/);
 assert(scriptMatch, "Generated browser script is missing");
@@ -131,6 +142,33 @@ const krishnaVishnuScript = krishnaVishnu.match(/<script>([\s\S]*?)<\/script>/);
 assert(krishnaVishnuScript, 'কৃষ্ণ-বিষ্ণুতত্ত্ব reading progress script is missing');
 new Function(krishnaVishnuScript[1]);
 
+const brahmaPath = lessonListLinks.find(link => /lesson-s03-c09/.test(link));
+assert(brahmaPath, 'ব্রহ্মার প্রার্থনা standalone article link is missing');
+const brahma = fs.readFileSync(brahmaPath, 'utf8');
+assert(brahma.includes('<html lang="bn">'), 'ব্রহ্মার প্রার্থনা article must use Bengali document language');
+assert(brahma.includes('ব্রহ্মার প্রার্থনা — কর্ম করব, কিন্তু কর্তার অহংকার যেন না আসে'), 'ব্রহ্মার প্রার্থনা article title is missing');
+assert(brahma.includes('শ্রীমদ্ভাগবত · স্কন্ধ ৩ · অধ্যায় ৯ · শ্লোক ৯–২৫'), 'ব্রহ্মার প্রার্থনা scripture reference is missing');
+assert(brahma.includes('গদ্যের সারার্থ') && brahma.includes('আমাদের জীবনে') && brahma.includes('নিজের কাছে তিনটি প্রশ্ন'), 'ব্রহ্মার প্রার্থনা lesson sections are incomplete');
+assert(!brahma.includes('ওয়েবসাইটে সংযোজনের নির্দেশ'), 'ব্রহ্মার source implementation instructions leaked into the article');
+assert(brahma.includes('../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title'), 'ব্রহ্মার প্রার্থনা return link is missing');
+const brahmaIds = [...brahma.matchAll(/\bid="([^\"]+)"/g)].map(match => match[1]);
+assert(new Set(brahmaIds).size === brahmaIds.length, 'Duplicate ব্রহ্মার প্রার্থনা article anchor IDs');
+const brahmaToc = brahma.match(/<aside class="article-toc"[\s\S]*?<nav>([\s\S]*?)<\/nav>/);
+assert(brahmaToc && (brahmaToc[1].match(/<a href="#lesson-s03-c09-section-/g) || []).length === 13, 'ব্রহ্মার প্রার্থনা article table of contents is incomplete');
+const brahmaLinks = [...brahma.matchAll(/(?:src|href)="([^\"]+)"/g)].map(match => match[1]);
+brahmaLinks.forEach(link => {
+  if (/^https?:/.test(link)) return;
+  if (link.startsWith('#')) {
+    if (link.length > 1) assert(brahmaIds.includes(link.slice(1)), `ব্রহ্মার প্রার্থনা article anchor target missing: ${link}`);
+    return;
+  }
+  const file = decodeURIComponent(link.split('#')[0]);
+  assert(fs.existsSync(path.resolve(path.dirname(brahmaPath), file)), `ব্রহ্মার প্রার্থনা article asset or return target missing: ${link}`);
+});
+const brahmaScript = brahma.match(/<script>([\s\S]*?)<\/script>/);
+assert(brahmaScript, 'ব্রহ্মার প্রার্থনা reading progress script is missing');
+new Function(brahmaScript[1]);
+
 console.log(JSON.stringify({
   html: htmlPath,
   tabs: 6,
@@ -142,5 +180,6 @@ console.log(JSON.stringify({
   fonts: requiredFonts.length,
   chotushlokiArticle: { anchors: chotushlokiIds.length, verses: 4, links: 'valid' },
   krishnaVishnuArticle: { anchors: krishnaVishnuIds.length, mapNodes: 9, comparisonTables: 2, scriptureQuotes: 5, links: 'valid' },
+  brahmaArticle: { path: brahmaPath, anchors: brahmaIds.length, independentPage: true, links: 'valid' },
   standaloneArticle: { parts: 8, illustrations: articleImages, quizCards, repairedCaptions: figureContexts, numbering: 'Bengali', links: 'valid' },
 }, null, 2));
