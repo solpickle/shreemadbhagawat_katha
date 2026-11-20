@@ -22,6 +22,18 @@ const rasaGopigitaArticlePath = "articles/vrindavan-rasa-gopigita.html";
 const rasaGopigitaMarkdown = fs.readFileSync(path.join(__dirname, "..", "porbo_8_shokhitotto.md"), "utf8").replace(/\r\n/g, "\n");
 const gitagovindaArticlePath = "articles/jayadeva-gitagovinda.html";
 const gitagovindaMarkdown = fs.readFileSync(path.join(__dirname, "..", "porbo_9_gitagovinda.md"), "utf8").replace(/\r\n/g, "\n");
+const porbo10ArticlePath = "articles/kapila-devohuti-mind-bhakti.html";
+const porbo10Markdown = fs.readFileSync(path.join(__dirname, "..", "porbo_10_debahuti_kopilmuni.md"), "utf8").replace(/\r\n/g, "\n");
+const porbo11ArticlePath = "articles/ahaituki-bhakti.html";
+const porbo11Markdown = fs.readFileSync(path.join(__dirname, "..", "porbo_11_ahituki_bhakti.md"), "utf8").replace(/\r\n/g, "\n");
+const porbo12ArticlePath = "articles/puranjan-upakhyan.html";
+const porbo12Markdown = fs.readFileSync(path.join(__dirname, "..", "porbo_12_puranjan.md"), "utf8").replace(/\r\n/g, "\n");
+const porbo13ArticlePath = "articles/dhruva-bhakti-journey.html";
+const porbo13Markdown = fs.readFileSync(path.join(__dirname, "..", "porbo_13_dhrubo.md"), "utf8").replace(/\r\n/g, "\n");
+const porbo14ArticlePath = "articles/ambarisha-durvasa-story.html";
+const porbo14Markdown = fs.readFileSync(path.join(__dirname, "..", "porbo_14_ambarish.md"), "utf8").replace(/\r\n/g, "\n");
+const porbo15ArticlePath = "articles/uddhava-gita-path.html";
+const porbo15Markdown = fs.readFileSync(path.join(__dirname, "..", "porbo_15_udhabgita.md"), "utf8").replace(/\r\n/g, "\n");
 
 function parseBlogArticle(markdown, filename) {
   const lines = markdown.trimEnd().split("\n");
@@ -37,6 +49,35 @@ function parseBlogArticle(markdown, filename) {
     metadata: lines.slice(deckIndex + 1, divider).filter(line => line.trim()),
     body: lines.slice(divider + 1).join("\n"),
   };
+}
+
+function parseSeriesArticle(markdown, filename) {
+  const lines = markdown.trimEnd().split("\n");
+  const titleIndex = lines.findIndex(line => /^#{1,2}\s+/.test(line));
+  const titleMatch = lines[titleIndex]?.match(/^(#{1,2})\s+(.+)$/);
+  if (!titleMatch) throw new Error(`Blog article title is missing: ${filename}`);
+  const titleLevel = titleMatch[1].length;
+  const dividerIndex = lines.findIndex((line, index) => index > titleIndex && /^\s*---+\s*$/.test(line));
+  const firstSectionIndex = lines.findIndex((line, index) => index > titleIndex && /^##\s+/.test(line));
+  let bodyStart;
+  let preface;
+  if (titleLevel === 1 && dividerIndex >= 0 && (firstSectionIndex < 0 || dividerIndex < firstSectionIndex)) {
+    bodyStart = dividerIndex + 1;
+    preface = lines.slice(titleIndex + 1, dividerIndex);
+  } else if (titleLevel === 1) {
+    bodyStart = firstSectionIndex;
+    if (bodyStart < 0) bodyStart = lines.length;
+    preface = lines.slice(titleIndex + 1, bodyStart);
+  } else {
+    bodyStart = titleIndex + 1;
+    preface = [];
+  }
+  const deckLine = preface.find(line => /^###\s+/.test(line) || /^\*[^*].*[^*]\*$/.test(line.trim()));
+  const deck = deckLine
+    ? deckLine.trim().replace(/^###\s+/, "").replace(/^\*|\*$/g, "")
+    : "";
+  const metadata = preface.filter(line => line.trim() && line !== deckLine && /^\*\*.+\*\*$/.test(line.trim()));
+  return { title: titleMatch[2], deck, metadata, body: lines.slice(bodyStart).join("\n") };
 }
 
 function joinShortNarrativeParagraphs(markdown) {
@@ -69,6 +110,12 @@ const krishnaShaktiArticle = parseBlogArticle(krishnaShaktiMarkdown, "porbo_6_kr
 const radhaTattvaArticle = parseBlogArticle(radhaTattvaMarkdown, "porbo_7_radhatotto.md");
 const rasaGopigitaArticle = parseBlogArticle(rasaGopigitaMarkdown, "porbo_8_shokhitotto.md");
 const gitagovindaArticle = parseBlogArticle(gitagovindaMarkdown, "porbo_9_gitagovinda.md");
+const porbo10Article = parseSeriesArticle(porbo10Markdown, "porbo_10_debahuti_kopilmuni.md");
+const porbo11Article = parseSeriesArticle(porbo11Markdown, "porbo_11_ahituki_bhakti.md");
+const porbo12Article = parseSeriesArticle(porbo12Markdown, "porbo_12_puranjan.md");
+const porbo13Article = parseSeriesArticle(porbo13Markdown, "porbo_13_dhrubo.md");
+const porbo14Article = parseSeriesArticle(porbo14Markdown, "porbo_14_ambarish.md");
+const porbo15Article = parseSeriesArticle(porbo15Markdown, "porbo_15_udhabgita.md");
 
 function parseFrontmatter(markdown, filename) {
   const match = markdown.match(/^---\n([\s\S]*?)\n---\n/);
@@ -710,7 +757,7 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
   if (prefix === "intro" && !preserveSource) markdown = editIntroduction(markdown);
   if (prefix === "conversations") markdown = editConversations(markdown);
   if (prefix === "timeline") markdown = editTimeline(markdown);
-  if (["porbo4", "shibtotto", "krishnashakti", "radha", "porbo8", "porbo9"].includes(prefix)) {
+  if (["porbo4", "shibtotto", "krishnashakti", "radha", "porbo8", "porbo9", "porbo10", "porbo11", "porbo12", "porbo13", "porbo14", "porbo15"].includes(prefix)) {
     markdown = joinShortNarrativeParagraphs(markdown);
   }
   const lines = markdown.split("\n");
@@ -779,7 +826,7 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
       const isDialogue = prefix === "conversations" && /^[④-⑳]/u.test(clean);
       const isSkandha = prefix === "conversations" && /^স্কন্ধ [০-৯]+ /u.test(clean);
       const isOverview = prefix === "conversations" && clean === "প্রথমে Master Architecture";
-      const level = isDialogue ? 4 : isSkandha || isOverview ? 3 : Math.min(heading[1].length + 1, 4);
+      const level = isDialogue ? 4 : isSkandha || isOverview ? 3 : prefix === "porbo11" ? Math.min(Math.max(heading[1].length - 1, 2), 4) : Math.min(heading[1].length + 1, 4);
       const headings = prefix === "intro" ? introHeadings
         : prefix === "conversations" ? conversationHeadings
         : prefix === "timeline" ? timelineHeadings
@@ -817,6 +864,12 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
       if (prefix === "radha" && heading[1].length === 2 && clean.startsWith("১১.")) out.push(renderRamanandaPath());
       if (prefix === "porbo8" && heading[1].length === 2 && clean.startsWith("৯.")) out.push(renderRasaGopigitaJourney());
       if (prefix === "porbo9" && heading[1].length === 2 && clean.startsWith("২.")) out.push(renderGitagovindaArc());
+      if (prefix === "porbo10" && heading[1].length === 2 && clean.startsWith("৬.")) out.push(renderKapilaMindPath());
+      if (prefix === "porbo11" && heading[1].length === 3 && clean.startsWith("ভাগবতে অহৈতুকী")) out.push(renderAhaitukiBhaktiPath());
+      if (prefix === "porbo12" && heading[1].length === 2 && clean.startsWith("৩.")) out.push(renderPuranjanCityMap());
+      if (prefix === "porbo13" && heading[1].length === 2 && clean.startsWith("৭.")) out.push(renderDhruvaJourney());
+      if (prefix === "porbo14" && heading[1].length === 2 && clean.startsWith("৩.")) out.push(renderAmbarishaStoryline());
+      if (prefix === "porbo15" && heading[1].length === 2 && clean.startsWith("১৪.")) out.push(renderUddhavaTeachingPath());
       i++;
       continue;
     }
@@ -1101,6 +1154,67 @@ function renderGitagovindaArc() {
   return `<figure class="gitagovinda-arc" aria-label="গীতগোবিন্দের বারোটি সর্গে রাধাকৃষ্ণের প্রেমকাহিনির ধারা"><div class="gitagovinda-arc-heading"><span>বারো সর্গের কাহিনিপথ</span><strong>আকর্ষণ → বিরহ → মধ্যস্থতা → পুনর্মিলন</strong></div><ol>${items}</ol><figcaption>সর্গগুলির বিষয়বস্তু মূল প্রবন্ধের তালিকা ও বর্ণনার ভিত্তিতে কয়েকটি পর্যায়ে দেখানো হয়েছে।</figcaption></figure>`;
 }
 
+function renderSeriesFlowMap(className, ariaLabel, heading, steps, caption) {
+  const items = steps.map(([title, detail], index) => `<li><span>${toBengaliDigits(index + 1)}</span><strong>${title}</strong><p>${detail}</p></li>`).join("");
+  return `<figure class="series-flow-map ${className}" aria-label="${ariaLabel}"><div class="series-map-heading">${heading}</div><ol>${items}</ol><figcaption>${caption}</figcaption></figure>`;
+}
+
+function renderKapilaMindPath() {
+  return `<figure class="kapila-mind-map" aria-label="চিত্তের অভিমুখ থেকে বন্ধন বা মুক্তির পথ"><div class="kapila-map-heading"><span>কপিলদেবের উপদেশে চিত্তের অভিমুখ</span><strong>একই মন · দুই গতি</strong></div><div class="kapila-mind-outcomes"><section><span>প্রকৃতির গুণে আসক্ত</span><b aria-hidden="true">↓</b><strong>বন্ধন</strong></section><section><span>পরমপুরুষে নিবিষ্ট</span><b aria-hidden="true">↓</b><strong>মুক্তির পথ</strong></section></div><div class="kapila-bhakti-path"><span>সাধুসঙ্গ</span><b aria-hidden="true">→</b><span>ভগবৎকথা</span><b aria-hidden="true">→</b><span>শ্রদ্ধা</span><b aria-hidden="true">→</b><span>রতি</span><b aria-hidden="true">→</b><strong>ভক্তি</strong></div><figcaption>শ্রীমদ্ভাগবত ৩.২৫.১৫ ও ৩.২৫.২৫-এর শিক্ষাকে একসঙ্গে দেখানো হয়েছে।</figcaption></figure>`;
+}
+
+function renderAhaitukiBhaktiPath() {
+  return renderSeriesFlowMap("ahaituki-bhakti-map", "অহৈতুকী ভক্তির স্বরূপ ও ফল", "অহৈতুকী ভক্তির মর্ম", [
+    ["কোনো স্বার্থের প্রত্যাশা নেই", "ভগবানের প্রতি ভালোবাসাই নিজের আনন্দ"],
+    ["ভক্তি অপ্রতিহত", "প্রতিকূলতাতেও ভক্তির ধারা থেমে যায় না"],
+    ["আত্মা সুপ্রসন্ন", "ভাগবতের বর্ণিত অন্তরের পরিতৃপ্তি"],
+  ], "শ্রীমদ্ভাগবত ১.২.৬-এর মূল ভাব ধরে তৈরি পাঠ-সহায়ক মানচিত্র।");
+}
+
+function renderPuranjanCityMap() {
+  const entries = [
+    ["পুরঞ্জন", "জীবাত্মা"],
+    ["নয়-দ্বারবিশিষ্ট নগরী", "মানবদেহ"],
+    ["সুন্দরী যুবতী", "বুদ্ধি"],
+    ["দশজন সঙ্গী", "পাঁচ জ্ঞানেন্দ্রিয় ও পাঁচ কর্মেন্দ্রিয়"],
+    ["পাঁচ-ফণাবিশিষ্ট সর্প", "পঞ্চপ্রাণ"],
+    ["অবিজ্ঞাত বন্ধু", "পরমাত্মা"],
+  ];
+  const items = entries.map(([symbol, meaning]) => `<div><dt>${symbol}</dt><dd>${meaning}</dd></div>`).join("");
+  return `<figure class="puranjan-city-map" aria-label="পুরঞ্জন উপাখ্যানের নগরী ও চরিত্রগুলির রূপক অর্থ"><div class="series-map-heading">নগরী ও চরিত্রের রূপক-সম্পর্ক</div><dl>${items}</dl><figcaption>শ্রীমদ্ভাগবত ৪.২৫–২৯-এ নারদ মুনির ব্যাখ্যা অনুযায়ী সাজানো হয়েছে।</figcaption></figure>`;
+}
+
+function renderDhruvaJourney() {
+  return renderSeriesFlowMap("dhruva-journey-map", "ধ্রুব মহারাজের ভক্তির পথে যাত্রা", "ধ্রুবের আকাঙ্ক্ষার রূপান্তর", [
+    ["অপমান ও আকাঙ্ক্ষা", "রাজপ্রাসাদের আঘাত থেকে লক্ষ্য স্থির"],
+    ["সুনীতির উপদেশ", "প্রতিশোধের বদলে ভগবানের আশ্রয়"],
+    ["নারদের দীক্ষা", "গুরু-নির্দেশে সাধনার পথ"],
+    ["মধুবনে তপস্যা", "একাগ্র সাধনা ও স্মরণ"],
+    ["ভগবানের দর্শন", "প্রার্থিত বস্তুর চেয়েও মহত্তর প্রাপ্তি"],
+    ["দিব্য পরিণতি", "ধ্রুবলোক ও ভক্তিতে প্রতিষ্ঠা"],
+  ], "ধ্রুব মহারাজের কাহিনির প্রধান বাঁকগুলি পর্বের বর্ণনাক্রমে সাজানো হয়েছে।");
+}
+
+function renderAmbarishaStoryline() {
+  return renderSeriesFlowMap("ambarisha-story-map", "অম্বরীষ ও দুর্বাসার উপাখ্যানের ঘটনাক্রম", "ব্রতসংকট থেকে ক্ষমা ও শরণাগতি", [
+    ["একাদশী ও দ্বাদশী", "ব্রত ও অতিথিসেবার ধর্মসংকট"],
+    ["দুর্বাসার ক্রোধ", "কৃত্যা সৃষ্টি করে আক্রমণ"],
+    ["সুদর্শনের আবির্ভাব", "ভক্তরক্ষা; দুর্বাসার পলায়ন"],
+    ["দেবতাদের কাছে আশ্রয়", "ব্রহ্মা ও শিবের পর নারায়ণের শরণ"],
+    ["ভক্তের কাছে প্রত্যাবর্তন", "অম্বরীষের ক্ষমা ও আতিথ্য"],
+  ], "উপাখ্যানের ঘটনাগুলি শ্রীমদ্ভাগবত নবম স্কন্ধ, চতুর্থ ও পঞ্চম অধ্যায় অনুসারে দেখানো হয়েছে।");
+}
+
+function renderUddhavaTeachingPath() {
+  return renderSeriesFlowMap("uddhava-teaching-map", "উদ্ধবগীতার প্রধান শিক্ষার ধারাবাহিকতা", "উদ্ধবের প্রশ্ন থেকে আত্মসমর্পণ", [
+    ["বিচ্ছেদের প্রশ্ন", "কৃষ্ণের বিদায়ের সময় উদ্ধবের জিজ্ঞাসা"],
+    ["প্রকৃতি থেকে শিক্ষা", "অবধূত ব্রাহ্মণের চব্বিশ গুরু"],
+    ["গুরু ও সাধুসঙ্গ", "আত্মজ্ঞান ও ভক্তির পথনির্দেশ"],
+    ["জ্ঞান ও বৈরাগ্য", "আসক্তির প্রকৃতি বুঝে অন্তরের স্বাধীনতা"],
+    ["স্মরণ ও সমর্পণ", "সমস্ত কর্ম ভগবানের উদ্দেশ্যে নিবেদন"],
+  ], "উদ্ধবগীতার আলোচিত অধ্যায়গুলির বিষয়ক্রম থেকে তৈরি পাঠ-সহায়ক মানচিত্র।");
+}
+
 function renderRadhaKrishnaGauraMap() {
   return `<figure class="radha-gaura-map" aria-label="রাধাকৃষ্ণের এক তত্ত্ব, দুই রূপ এবং শ্রীচৈতন্যরূপে প্রকাশ"><div class="radha-gaura-unity">এক তত্ত্ব</div><div class="radha-gaura-pair"><section><h4>শ্রীকৃষ্ণ</h4><p>প্রেমের পরম বিষয়</p></section><section><h4>শ্রীমতী রাধারাণী</h4><p>প্রেমের সর্বোচ্চ আশ্রয়</p></section></div><div class="radha-gaura-connector">প্রেমলীলায় দুই রূপ · রাধাভাব ও রাধাকান্তি</div><div class="radha-gaura-result"><span>একীভূত প্রকাশ</span><strong>শ্রীচৈতন্য মহাপ্রভু</strong><small>রাধাভাবদ্যুতিসুবলিত কৃষ্ণ</small></div><figcaption>রাধা ও কৃষ্ণ তত্ত্বত অভিন্ন, কিন্তু প্রেমলীলার জন্য দুই রূপে প্রকাশিত—এটাই গৌড়ীয় বৈষ্ণব সিদ্ধান্ত।</figcaption></figure>`;
 }
@@ -1201,11 +1315,16 @@ function renderGitagovindaCard() {
   return `<article class="lesson-entry" id="gitagovinda-article-entry" data-lesson-entry><a class="lesson-open article-link" href="${gitagovindaArticlePath}"><span class="lesson-mark" aria-hidden="true">◆</span><span class="lesson-card-body"><span class="lesson-card-kicker">ধারাবাহিক পাঠ · পর্ব ৯</span><strong class="lesson-card-title">${inline(gitagovindaArticle.title, true)}</strong><span class="lesson-card-reference">জয়দেব · ১২টি সর্গ · রাধার মান · প্রেমের পুনর্মিলন</span><span class="lesson-card-teaching">${inline(gitagovindaArticle.deck, true)}</span></span><span class="lesson-card-arrow" aria-hidden="true">পড়ুন →</span></a></article>`;
 }
 
+function renderSeriesArticleCard(article, articlePath, partNumber, reference) {
+  const teaching = article.deck || "";
+  return `<article class="lesson-entry" id="porbo${partNumber}-article-entry" data-lesson-entry><a class="lesson-open article-link" href="${articlePath}"><span class="lesson-mark" aria-hidden="true">◆</span><span class="lesson-card-body"><span class="lesson-card-kicker">ধারাবাহিক পাঠ · পর্ব ${toBengaliDigits(partNumber)}</span><strong class="lesson-card-title">${inline(article.title, true)}</strong><span class="lesson-card-reference">${reference}</span>${teaching ? `<span class="lesson-card-teaching">${inline(teaching, true)}</span>` : ""}</span><span class="lesson-card-arrow" aria-hidden="true">পড়ুন →</span></a></article>`;
+}
+
 function renderDetailedLessons() {
   const articleCard = `<article class="lesson-entry" id="${vishnuArticle.entryId}" data-lesson-entry><a class="lesson-open article-link" href="${vishnuArticle.articlePath}"><span class="lesson-mark" aria-hidden="true">◆</span><span class="lesson-card-body"><span class="lesson-card-kicker">সচিত্র ধারাবাহিক পাঠ</span><strong class="lesson-card-title">${escapeHtml(vishnuArticle.title)}</strong><span class="lesson-card-reference">৮টি পর্ব · সৃষ্টি ও সময়চক্র · শিব ও শক্তিতত্ত্ব</span><span class="lesson-card-teaching">কৃষ্ণ, নারায়ণ ও তিন বিষ্ণুর সম্পর্ক থেকে চতুর্দশ ভুবন, যুগ–মন্বন্তর–কল্প, সদাশিব ও রুদ্র—সারণি ও ছবিসহ বিস্তৃত আলোচনা।</span></span><span class="lesson-card-arrow" aria-hidden="true">পড়ুন →</span></a></article>`;
   const detailedLessonCards = detailedLessons.map(renderDetailedLessonCard).join("");
   // Keep the numbered reading series first, followed by thematic essays; story-specific lessons remain last.
-  const cards = [renderChotushlokiCard(), renderKrishnaVishnuCard(), renderChoturdoshBhobanCard(), renderShibtottoCard(), renderKrishnaShaktiCard(), renderRadhaTattvaCard(), renderRasaGopigitaCard(), renderGitagovindaCard(), articleCard, detailedLessonCards].join("");
+  const cards = [renderChotushlokiCard(), renderKrishnaVishnuCard(), renderChoturdoshBhobanCard(), renderShibtottoCard(), renderKrishnaShaktiCard(), renderRadhaTattvaCard(), renderRasaGopigitaCard(), renderGitagovindaCard(), renderSeriesArticleCard(porbo10Article, porbo10ArticlePath, 10, "তৃতীয় স্কন্ধ · কপিলদেব ও দেবহূতি · মন, সাধুসঙ্গ ও ভক্তি"), renderSeriesArticleCard(porbo11Article, porbo11ArticlePath, 11, "অহৈতুকী ভক্তি · নিষ্কাম প্রেম · আত্মার প্রসন্নতা"), renderSeriesArticleCard(porbo12Article, porbo12ArticlePath, 12, "চতুর্থ স্কন্ধ · পুরঞ্জন উপাখ্যান · মন, ইন্দ্রিয় ও আত্মস্মরণ"), renderSeriesArticleCard(porbo13Article, porbo13ArticlePath, 13, "চতুর্থ স্কন্ধ · ধ্রুব মহারাজ · ভক্তির রূপান্তর"), renderSeriesArticleCard(porbo14Article, porbo14ArticlePath, 14, "নবম স্কন্ধ · অম্বরীষ ও দুর্বাসা · ভক্তি, ক্ষমা ও শরণাগতি"), renderSeriesArticleCard(porbo15Article, porbo15ArticlePath, 15, "একাদশ স্কন্ধ · চব্বিশ গুরু · জ্ঞান, বৈরাগ্য ও ভক্তি"), articleCard, detailedLessonCards].join("");
   return `<header class="detailed-lessons-header"><p><span aria-hidden="true">◆</span> পূর্ণাঙ্গ অধ্যয়ন</p><h2 id="detailed-lessons-title">বিশদ পাঠ</h2><p>নির্বাচিত প্রসঙ্গের বিস্তৃত পাঠ, ব্যাখ্যা ও জীবনে প্রয়োগ—একটি ক্রমবর্ধমান পাঠাগার।</p></header><section class="detailed-lessons" aria-labelledby="lesson-index-title"><div class="section-rule"><span>পাঠাগার</span></div><h3 id="lesson-index-title">সকল বিশদ পাঠ</h3><label class="lesson-search-label"><span class="sr-only">বিশদ পাঠ খুঁজুন</span><input id="lesson-search" type="search" placeholder="শিরোনাম, বক্তা বা বিষয় খুঁজুন..." autocomplete="off"></label><div class="lesson-list">${cards}</div><p class="lesson-empty" hidden>এই শব্দে কোনো বিশদ পাঠ পাওয়া যায়নি।</p></section>`;
 }
 
@@ -1331,7 +1450,7 @@ function renderStandaloneRadhaTattvaArticle() {
 
 function renderStandaloneSeriesArticle(article, prefix, partNumber) {
   const renderedArticle = markdownToHtml(article.body, prefix, { preserveSource: true });
-  const tocItems = renderedArticle.nav.filter(item => item.level === 2).map(item => {
+  const tocItems = renderedArticle.nav.filter(item => prefix === "porbo11" ? item.level === 3 : item.level === 2).map(item => {
     const numbered = item.title.match(/^([০-৯]+\.)\s*(.*)$/u);
     const number = numbered ? inline(numbered[1], true) : "·";
     const title = numbered ? numbered[2] : item.title;
@@ -1340,10 +1459,12 @@ function renderStandaloneSeriesArticle(article, prefix, partNumber) {
   const metadata = article.metadata.map(line => `<p>${inline(line, true)}</p>`).join("");
   const title = inline(article.title, true);
   const deck = inline(article.deck, true);
+  const deckHtml = article.deck ? `<p class="article-deck">${deck}</p>` : "";
+  const metadataHtml = metadata ? `<div class="article-meta-lines">${metadata}</div>` : "";
   return `<!DOCTYPE html>
-<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} | শ্রীমদ্ভাগবত কথা</title><meta name="description" content="${escapeHtml(article.deck)}"><meta name="theme-color" content="#f8f6f1"><link rel="stylesheet" href="../assets/article.css"></head>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} | শ্রীমদ্ভাগবত কথা</title><meta name="description" content="${escapeHtml(article.deck || article.title)}"><meta name="theme-color" content="#f8f6f1"><link rel="stylesheet" href="../assets/article.css"></head>
 <body class="series-article series-article-${prefix}"><a class="skip-link" href="#article">মূল লেখায় যান</a><div class="reading-progress" aria-hidden="true"></div><header class="article-topbar"><a href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">← বিশদ পাঠে ফিরুন</a><a class="site-name" href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">শ্রীমদ্ভাগবত কথা</a><a href="#contents">সূচিপত্র</a></header>
-<header class="article-hero"><p class="eyebrow">বিশদ পাঠ · পর্ব ${toBengaliDigits(partNumber)}</p><h1>${title}</h1><p class="article-deck">${deck}</p><div class="article-meta-lines">${metadata}</div></header>
+<header class="article-hero"><p class="eyebrow">বিশদ পাঠ · পর্ব ${toBengaliDigits(partNumber)}</p><h1>${title}</h1>${deckHtml}${metadataHtml}</header>
 <main class="article-layout"><aside class="article-toc" id="contents" aria-label="পাঠের সূচিপত্র"><details open><summary>এই পাঠের সূচি</summary><nav>${tocItems}</nav></details></aside><article id="article"><div class="article-part">${renderedArticle.html}</div><footer class="article-end"><p>এই পাঠটি শেষ করেছেন?</p><a href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">← বিশদ পাঠে ফিরে যান</a></footer></article></main>
 <script>const progress=document.querySelector('.reading-progress');function updateProgress(){const root=document.documentElement;const available=root.scrollHeight-root.clientHeight;progress.style.width=(available>0?root.scrollTop/available*100:0)+'%'}addEventListener('scroll',updateProgress,{passive:true});updateProgress();</script></body></html>`;
 }
@@ -1396,6 +1517,12 @@ rendered.push({
     { id: "radha-tattva-article-entry", title: radhaTattvaArticle.title },
     { id: "rasa-gopigita-article-entry", title: rasaGopigitaArticle.title },
     { id: "gitagovinda-article-entry", title: gitagovindaArticle.title },
+    { id: "porbo10-article-entry", title: porbo10Article.title },
+    { id: "porbo11-article-entry", title: porbo11Article.title },
+    { id: "porbo12-article-entry", title: porbo12Article.title },
+    { id: "porbo13-article-entry", title: porbo13Article.title },
+    { id: "porbo14-article-entry", title: porbo14Article.title },
+    { id: "porbo15-article-entry", title: porbo15Article.title },
     { id: vishnuArticle.entryId, title: vishnuArticle.title },
     ...detailedLessons.map(lesson => ({ id: lesson.id, title: lesson.title })),
   ],
@@ -2125,10 +2252,22 @@ const rasaGopigitaHtml = renderStandaloneSeriesArticle(rasaGopigitaArticle, "por
 fs.writeFileSync(path.join(__dirname, rasaGopigitaArticlePath), rasaGopigitaHtml, "utf8");
 const gitagovindaHtml = renderStandaloneSeriesArticle(gitagovindaArticle, "porbo9", 9);
 fs.writeFileSync(path.join(__dirname, gitagovindaArticlePath), gitagovindaHtml, "utf8");
+const porbo10Html = renderStandaloneSeriesArticle(porbo10Article, "porbo10", 10);
+fs.writeFileSync(path.join(__dirname, porbo10ArticlePath), porbo10Html, "utf8");
+const porbo11Html = renderStandaloneSeriesArticle(porbo11Article, "porbo11", 11);
+fs.writeFileSync(path.join(__dirname, porbo11ArticlePath), porbo11Html, "utf8");
+const porbo12Html = renderStandaloneSeriesArticle(porbo12Article, "porbo12", 12);
+fs.writeFileSync(path.join(__dirname, porbo12ArticlePath), porbo12Html, "utf8");
+const porbo13Html = renderStandaloneSeriesArticle(porbo13Article, "porbo13", 13);
+fs.writeFileSync(path.join(__dirname, porbo13ArticlePath), porbo13Html, "utf8");
+const porbo14Html = renderStandaloneSeriesArticle(porbo14Article, "porbo14", 14);
+fs.writeFileSync(path.join(__dirname, porbo14ArticlePath), porbo14Html, "utf8");
+const porbo15Html = renderStandaloneSeriesArticle(porbo15Article, "porbo15", 15);
+fs.writeFileSync(path.join(__dirname, porbo15ArticlePath), porbo15Html, "utf8");
 const detailedLessonArticles = detailedLessons.map(lesson => {
   const articlePath = `articles/${lesson.id}.html`;
   const articleHtml = renderStandaloneDetailedLessonArticle(lesson);
   fs.writeFileSync(path.join(__dirname, articlePath), articleHtml, "utf8");
   return { path: articlePath, bytes: Buffer.byteLength(articleHtml) };
 });
-console.log(JSON.stringify({ chapters: rendered.length, detailedLessons: detailedLessons.length, standaloneArticles: [vishnuArticle.articlePath, chotushlokiArticlePath, krishnaVishnuArticlePath, choturdoshBhobanArticlePath, shibtottoArticlePath, krishnaShaktiArticlePath, radhaTattvaArticlePath, rasaGopigitaArticlePath, gitagovindaArticlePath, ...detailedLessonArticles.map(article => article.path)], sourceCharacters: chapters.reduce((n,x)=>n+x.markdown.length,0) + chotushlokiMarkdown.length + krishnaVishnuMarkdown.length + choturdoshBhobanMarkdown.length + shibtottoMarkdown.length + krishnaShaktiMarkdown.length + radhaTattvaMarkdown.length + rasaGopigitaMarkdown.length + gitagovindaMarkdown.length, outputBytes: Buffer.byteLength(html), chotushlokiBytes: Buffer.byteLength(chotushlokiHtml), krishnaVishnuBytes: Buffer.byteLength(krishnaVishnuHtml), choturdoshBhobanBytes: Buffer.byteLength(choturdoshBhobanHtml), shibtottoBytes: Buffer.byteLength(shibtottoHtml), krishnaShaktiBytes: Buffer.byteLength(krishnaShaktiHtml), radhaTattvaBytes: Buffer.byteLength(radhaTattvaHtml), rasaGopigitaBytes: Buffer.byteLength(rasaGopigitaHtml), gitagovindaBytes: Buffer.byteLength(gitagovindaHtml), detailedLessonArticles }, null, 2));
+console.log(JSON.stringify({ chapters: rendered.length, detailedLessons: detailedLessons.length, standaloneArticles: [vishnuArticle.articlePath, chotushlokiArticlePath, krishnaVishnuArticlePath, choturdoshBhobanArticlePath, shibtottoArticlePath, krishnaShaktiArticlePath, radhaTattvaArticlePath, rasaGopigitaArticlePath, gitagovindaArticlePath, porbo10ArticlePath, porbo11ArticlePath, porbo12ArticlePath, porbo13ArticlePath, porbo14ArticlePath, porbo15ArticlePath, ...detailedLessonArticles.map(article => article.path)], sourceCharacters: chapters.reduce((n,x)=>n+x.markdown.length,0) + chotushlokiMarkdown.length + krishnaVishnuMarkdown.length + choturdoshBhobanMarkdown.length + shibtottoMarkdown.length + krishnaShaktiMarkdown.length + radhaTattvaMarkdown.length + rasaGopigitaMarkdown.length + gitagovindaMarkdown.length + porbo10Markdown.length + porbo11Markdown.length + porbo12Markdown.length + porbo13Markdown.length + porbo14Markdown.length + porbo15Markdown.length, outputBytes: Buffer.byteLength(html), chotushlokiBytes: Buffer.byteLength(chotushlokiHtml), krishnaVishnuBytes: Buffer.byteLength(krishnaVishnuHtml), choturdoshBhobanBytes: Buffer.byteLength(choturdoshBhobanHtml), shibtottoBytes: Buffer.byteLength(shibtottoHtml), krishnaShaktiBytes: Buffer.byteLength(krishnaShaktiHtml), radhaTattvaBytes: Buffer.byteLength(radhaTattvaHtml), rasaGopigitaBytes: Buffer.byteLength(rasaGopigitaHtml), gitagovindaBytes: Buffer.byteLength(gitagovindaHtml), porbo10Bytes: Buffer.byteLength(porbo10Html), porbo11Bytes: Buffer.byteLength(porbo11Html), porbo12Bytes: Buffer.byteLength(porbo12Html), porbo13Bytes: Buffer.byteLength(porbo13Html), porbo14Bytes: Buffer.byteLength(porbo14Html), porbo15Bytes: Buffer.byteLength(porbo15Html), detailedLessonArticles }, null, 2));

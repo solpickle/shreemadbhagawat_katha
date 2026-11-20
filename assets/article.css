@@ -88,6 +88,30 @@
 .gitagovinda-arc li strong{color:#342f2a;font-size:.85rem;font-weight:500;line-height:1.55}
 @media(max-width:760px){.rasa-gopigita-journey,.gitagovinda-arc{padding:16px 14px}.rasa-gopigita-journey ol{grid-template-columns:repeat(2,minmax(0,1fr))}.gitagovinda-arc ol{grid-template-columns:repeat(2,minmax(0,1fr))}.gitagovinda-arc li{min-height:0}}
 @media(max-width:420px){.rasa-gopigita-journey,.gitagovinda-arc{padding:13px 10px}.rasa-gopigita-journey ol,.gitagovinda-arc ol{gap:7px}.rasa-gopigita-journey li,.gitagovinda-arc li{padding:9px;min-height:0}.rasa-gopigita-journey li strong,.gitagovinda-arc li strong{font-size:.78rem}.rasa-gopigita-journey li p,.gitagovinda-arc li p{font-size:.7rem}}
+/* Parts 10–15: quiet study maps and narrative paths using the shared paper/terracotta palette. */
+.series-flow-map,.kapila-mind-map,.puranjan-city-map{margin:24px 0 30px;padding:19px 20px;border:1px solid #e4ddd2;border-radius:5px;background:#fcfaf6}
+.series-map-heading,.kapila-map-heading{margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid #e2d8cb;color:#9c2d09;font-size:.84rem}
+.series-flow-map ol{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px;margin:0;padding:0;list-style:none}
+.series-flow-map li{display:flex;flex-direction:column;align-items:flex-start;min-height:116px;margin:0;padding:12px;border:1px solid #e7e0d6;border-top:2px solid #b9683d;border-radius:4px;background:#fff}
+.series-flow-map li:nth-child(even){border-top-color:#557d80}
+.series-flow-map li>span{display:grid;place-items:center;width:24px;height:24px;margin-bottom:7px;border-radius:50%;background:#f3ece1;color:#9c2d09;font-size:.7rem}
+.series-flow-map li strong{color:#342f2a;font-size:.82rem;font-weight:500;line-height:1.55}
+.series-flow-map li p{margin:5px 0 0;color:#62594f;font-size:.73rem;line-height:1.65}
+.series-flow-map figcaption,.kapila-mind-map figcaption,.puranjan-city-map figcaption{margin-top:12px;padding-top:9px;border-top:1px solid #e9e2d8;color:#74695e;font-size:.71rem;line-height:1.65}
+.kapila-map-heading{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:5px 14px}
+.kapila-map-heading strong{color:#315e63;font-size:.75rem;font-weight:500}
+.kapila-mind-outcomes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.kapila-mind-outcomes section{display:grid;justify-items:center;gap:3px;padding:12px;border:1px solid #e7e0d6;border-radius:4px;background:#fff;text-align:center}
+.kapila-mind-outcomes section:first-child{border-top:2px solid #b9683d}.kapila-mind-outcomes section:last-child{border-top:2px solid #557d80}
+.kapila-mind-outcomes section span{color:#62594f;font-size:.78rem}.kapila-mind-outcomes section b{color:#b9683d;font-size:.9rem;font-weight:400}.kapila-mind-outcomes section strong{font-size:.92rem}
+.kapila-bhakti-path{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:12px;padding:11px;background:#f4f0e8;color:#315e63;font-size:.78rem}
+.kapila-bhakti-path span,.kapila-bhakti-path strong{padding:4px 8px;border:1px solid #e2d8cb;border-radius:3px;background:#fff;font-weight:500}.kapila-bhakti-path b{color:#b9683d;font-weight:400}
+.puranjan-city-map dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0}
+.puranjan-city-map dl>div{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:8px;align-items:center;margin:0;padding:10px;border:1px solid #e7e0d6;border-left:2px solid #b9683d;border-radius:3px;background:#fff}
+.puranjan-city-map dl>div:nth-child(even){border-left-color:#557d80}
+.puranjan-city-map dt{color:#342f2a;font-size:.78rem;font-weight:500}.puranjan-city-map dd{margin:0;color:#62594f;font-size:.75rem;line-height:1.55}
+@media(max-width:700px){.series-flow-map,.kapila-mind-map,.puranjan-city-map{padding:15px 13px}.series-flow-map ol{grid-template-columns:repeat(2,minmax(0,1fr))}.series-flow-map li{min-height:0}.puranjan-city-map dl{grid-template-columns:1fr}}
+@media(max-width:420px){.series-flow-map,.kapila-mind-map,.puranjan-city-map{padding:12px 10px}.series-flow-map ol{gap:7px}.series-flow-map li{padding:9px}.series-flow-map li strong,.puranjan-city-map dt{font-size:.76rem}.series-flow-map li p,.puranjan-city-map dd{font-size:.69rem}.kapila-mind-outcomes{gap:7px}.kapila-mind-outcomes section{padding:9px 6px}.kapila-mind-outcomes section span{font-size:.7rem}.kapila-bhakti-path{gap:5px;padding:8px 5px;font-size:.69rem}.kapila-bhakti-path span,.kapila-bhakti-path strong{padding:4px 5px}.puranjan-city-map dl>div{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:6px;padding:8px}}
 /* A long article should jump directly to its selected section. */
 html{scroll-behavior:auto}
 @media print{body{background:white;font-size:11pt}.article-topbar,.article-toc,.reading-progress,.skip-link,.article-end a{display:none}.article-layout{display:block}.article-hero{padding:0 0 18px}#article{padding:0;border:0}.article-figure,.article-table,.text-map,blockquote,.quiz-card{break-inside:avoid}.article-figure img{max-height:350px}h2,h3,h4{break-after:avoid}.article-table{overflow:visible}table{min-width:0;font-size:9pt}.quiz-option{border:0;padding:0}.quiz-feedback{display:block!important}}
