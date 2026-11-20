@@ -66,6 +66,28 @@
 .ramananda-path ol{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:0;padding:0;list-style:none}.ramananda-path li{display:grid;justify-items:start;align-content:start;gap:7px;min-height:78px;margin:0;padding:11px;border:1px solid #e5ded4;border-radius:4px;background:#fff}.ramananda-path li strong{color:#403a34;font-size:.79rem;font-weight:500;line-height:1.65}.radha-summary-chart>p{margin:0 0 10px;color:#74695e;font-size:.73rem}.radha-summary-chart ol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0;padding:0;list-style:none}.radha-summary-chart li{display:grid;grid-template-columns:27px minmax(0,1fr);gap:9px;align-items:start;margin:0;padding:11px;border:1px solid #e8e1d7;border-radius:4px;background:#fff}.radha-summary-chart dt{color:#9c2d09;font-size:.78rem;font-weight:600}.radha-summary-chart dd{margin:3px 0 0;color:#39342f;font-size:.82rem;line-height:1.7}
 @media(max-width:700px){.radha-gaura-map,.radha-desires-chart,.mahaprabhu-purpose-map,.ramananda-path,.radha-summary-chart{padding:14px 12px}.radha-desires-chart ol,.radha-summary-chart ol{grid-template-columns:1fr}.radha-desires-chart li{grid-template-columns:28px minmax(0,1fr);align-items:start;padding:11px}.radha-desires-chart li>span{grid-row:span 2}.radha-desires-chart li p{font-size:.83rem}.ramananda-path ol{grid-template-columns:repeat(2,minmax(0,1fr))}.radha-gaura-pair,.purpose-map-branches{gap:8px}.radha-gaura-pair section,.purpose-map-branches section{padding:10px 8px}.purpose-map-branches p{font-size:.77rem}}
 @media(max-width:420px){.radha-gaura-pair,.purpose-map-branches{grid-template-columns:1fr}.radha-gaura-pair{margin-top:25px}.radha-gaura-pair:before,.purpose-map-branches:before{display:none}.radha-gaura-pair section:before,.purpose-map-branches section:before{top:-10px;height:8px}.ramananda-path ol{grid-template-columns:1fr}.ramananda-path li{min-height:0}}
+/* The two latest reading-series articles use compact visual summaries to clarify their narrative arcs. */
+.rasa-gopigita-journey,.gitagovinda-arc{margin:24px 0 30px;padding:20px 22px;border:1px solid #e4ddd2;border-radius:5px;background:#fcfaf6}
+.rasa-journey-heading,.gitagovinda-arc-heading{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:5px 16px;margin:0 0 16px;padding-bottom:11px;border-bottom:1px solid #e2d8cb}
+.rasa-journey-heading span,.gitagovinda-arc-heading span{color:#9c2d09;font-size:.78rem}
+.rasa-journey-heading strong,.gitagovinda-arc-heading strong{color:#315e63;font-size:.88rem;font-weight:500}
+.rasa-gopigita-journey ol{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0;padding:0;list-style:none;counter-reset:rasa-step}
+.rasa-gopigita-journey li{position:relative;display:grid;grid-template-columns:25px minmax(0,1fr);align-content:start;gap:3px 8px;min-height:102px;margin:0;padding:12px;border:1px solid #e7e0d6;border-top:2px solid #b9683d;border-radius:4px;background:#fff}
+.rasa-gopigita-journey li:nth-child(4n+2){border-top-color:#557d80}
+.rasa-gopigita-journey li:nth-child(4n+3){border-top-color:#bd9661}
+.rasa-gopigita-journey li:nth-child(4n){border-top-color:#315e63}
+.rasa-journey-number{grid-row:span 2;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#f3ece1;color:#9c2d09;font-size:.72rem}
+.rasa-journey-reference{color:#766b60;font-size:.68rem}
+.rasa-gopigita-journey li strong{grid-column:2;color:#342f2a;font-size:.84rem;font-weight:500;line-height:1.55}
+.rasa-gopigita-journey li p,.gitagovinda-arc li p{grid-column:1/-1;margin:5px 0 0;color:#62594f;font-size:.75rem;line-height:1.7}
+.rasa-gopigita-journey figcaption,.gitagovinda-arc figcaption{margin-top:13px;padding-top:10px;border-top:1px solid #e9e2d8;color:#74695e;font-size:.72rem;line-height:1.7}
+.gitagovinda-arc ol{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin:0;padding:0;list-style:none}
+.gitagovinda-arc li{position:relative;display:flex;flex-direction:column;align-items:flex-start;min-height:128px;margin:0;padding:12px;border:1px solid #e7e0d6;border-bottom:2px solid #b9683d;border-radius:4px;background:#fff}
+.gitagovinda-arc li:nth-child(even){border-bottom-color:#557d80}
+.gitagovinda-arc li>span{margin-bottom:8px;color:#9c2d09;font-size:.7rem}
+.gitagovinda-arc li strong{color:#342f2a;font-size:.85rem;font-weight:500;line-height:1.55}
+@media(max-width:760px){.rasa-gopigita-journey,.gitagovinda-arc{padding:16px 14px}.rasa-gopigita-journey ol{grid-template-columns:repeat(2,minmax(0,1fr))}.gitagovinda-arc ol{grid-template-columns:repeat(2,minmax(0,1fr))}.gitagovinda-arc li{min-height:0}}
+@media(max-width:420px){.rasa-gopigita-journey,.gitagovinda-arc{padding:13px 10px}.rasa-gopigita-journey ol,.gitagovinda-arc ol{gap:7px}.rasa-gopigita-journey li,.gitagovinda-arc li{padding:9px;min-height:0}.rasa-gopigita-journey li strong,.gitagovinda-arc li strong{font-size:.78rem}.rasa-gopigita-journey li p,.gitagovinda-arc li p{font-size:.7rem}}
 /* A long article should jump directly to its selected section. */
 html{scroll-behavior:auto}
 @media print{body{background:white;font-size:11pt}.article-topbar,.article-toc,.reading-progress,.skip-link,.article-end a{display:none}.article-layout{display:block}.article-hero{padding:0 0 18px}#article{padding:0;border:0}.article-figure,.article-table,.text-map,blockquote,.quiz-card{break-inside:avoid}.article-figure img{max-height:350px}h2,h3,h4{break-after:avoid}.article-table{overflow:visible}table{min-width:0;font-size:9pt}.quiz-option{border:0;padding:0}.quiz-feedback{display:block!important}}
