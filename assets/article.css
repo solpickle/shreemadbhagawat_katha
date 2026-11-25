@@ -115,3 +115,16 @@
 /* A long article should jump directly to its selected section. */
 html{scroll-behavior:auto}
 @media print{body{background:white;font-size:11pt}.article-topbar,.article-toc,.reading-progress,.skip-link,.article-end a{display:none}.article-layout{display:block}.article-hero{padding:0 0 18px}#article{padding:0;border:0}.article-figure,.article-table,.text-map,blockquote,.quiz-card{break-inside:avoid}.article-figure img{max-height:350px}h2,h3,h4{break-after:avoid}.article-table{overflow:visible}table{min-width:0;font-size:9pt}.quiz-option{border:0;padding:0}.quiz-feedback{display:block!important}}
+
+/* Keep the four-part meditation sequence inside the phone viewport. The heading occupies its own row, with labels and arrows in their original order. */
+@media(max-width:700px){
+.series-article-porbo10p1 .kapila-section-map{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:3px;padding:10px 5px}
+.series-article-porbo10p1 .kapila-section-map figcaption{grid-column:1/-1;flex-basis:auto;width:auto}
+.series-article-porbo10p1 .kapila-section-map span{min-width:0;padding:5px 3px;font-size:.7rem;line-height:1.5;text-align:center;overflow-wrap:anywhere}
+.series-article-porbo10p1 .kapila-section-map b{font-size:.7rem}
+}
+@media(max-width:420px){
+.series-article-porbo10p1 .kapila-section-map{gap:2px;padding:9px 3px}
+.series-article-porbo10p1 .kapila-section-map span{padding:4px 2px;font-size:.63rem;line-height:1.4}
+.series-article-porbo10p1 .kapila-section-map b{font-size:.62rem}
+}
