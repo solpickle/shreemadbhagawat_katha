@@ -148,3 +148,7 @@ html{scroll-behavior:auto}
 .series-article-porbo10 #contents a{padding:7px 6px}
 .series-article-porbo10 .article-layout>#article{padding:8px 18px 40px}
 }
+/* Explicit title elements prevent plain link text from entering the number rail. */
+.series-article-porbo10 #contents a .toc-number{grid-column:1;color:#b9683d}
+.series-article-porbo10 #contents a .toc-title{grid-column:2;min-width:0;color:inherit}
+.series-article-porbo10 #contents a .toc-title:only-child{grid-column:1/-1}
