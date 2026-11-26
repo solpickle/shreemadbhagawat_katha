@@ -44,6 +44,34 @@ Use terracotta for section emphasis and links, and muted blue-green for a second
 - Only use the number-rail/grid layout when the heading contains a real section number. Unnumbered headings must occupy the full content width and must not inherit the narrow number column.
 - Use smaller, quieter subsection headings to distinguish them from major section headings. Reserve a terracotta variation for a meaningful reflection or conclusion.
 
+### Standalone article contents navigation
+
+Use `articles/kapila-devohuti-mind-bhakti.html`, `articles/kapila-devohuti-dhyana-yoga.html`, and their scoped rules in `assets/article.css` as the approved reference. Reuse the pattern for future standalone blogs without copying their article-specific body class.
+
+- Above `1000px`, use a two-column article grid: a roughly `240–260px` sticky left contents panel and a `minmax(0,1fr)` reading column. Keep the contents links in one column. The panel scrolls vertically within the viewport and stays below the top bar (`top:64px`, `max-height:calc(100vh - 80px)` in the current template).
+- At `1000px` and below, place the contents above the article in normal document flow. Initially collapse the native `<details>` panel; readers can open it using the Bengali summary. Give the article the available width with comfortable side padding. Use the same breakpoint in CSS and initialization JavaScript.
+- Keep `<details>` closed in the HTML, then initialize it open on desktop. Do not repeatedly reset its state while the reader is using it. Preserve working section anchors and keyboard access.
+- Each numbered link must contain two explicit elements. The title must occupy the flexible second column. A bare text node is an anonymous grid item: if it is the only child, the whole title can fall into the narrow number column and wrap one word per line. Changing breakpoints or sidebar width does not fix this markup error.
+
+```html
+<a href="#section-1">
+  <span class="toc-number">১.</span>
+  <span class="toc-title">ভূমিকা — পাঠের সূচনা</span>
+</a>
+<!-- An unnumbered entry spans the full link width. -->
+<a href="#sources"><span class="toc-title">শাস্ত্রীয় সূত্র</span></a>
+```
+
+```css
+/* Scope these rules to the intended article/template. */
+.article-toc a { display:grid; grid-template-columns:28px minmax(0,1fr); gap:8px; }
+.article-toc .toc-number { grid-column:1; }
+.article-toc .toc-title { grid-column:2; min-width:0; color:inherit; }
+.article-toc .toc-title:only-child { grid-column:1/-1; }
+```
+
+Before publishing a navigation change, inspect both numbered and unnumbered entries in the rendered browser. Check desktop sticky/open behavior and mobile static/collapsed behavior, expand and follow a link, and check for page-level horizontal overflow. Target phone widths of `360px` and `390px` plus a desktop viewport. Report the actual viewport if a preview tool clamps its size; do not call a requested size a verified size. Review CSS specificity and article-local overrides. When shared CSS changes, update the affected pages' stylesheet version query so cached styles do not conceal the fix. A successful build/deploy alone does not verify layout.
+
 ### Paragraphs, callouts, and quotations
 
 - Keep explanatory narrative in `<p>` elements. Use `<blockquote>` for actual quotations, including Sanskrit ślokas, and preserve line breaks that belong to verse form.
