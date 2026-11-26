@@ -128,27 +128,22 @@ html{scroll-behavior:auto}
 .series-article-porbo10p1 .kapila-section-map span{padding:4px 2px;font-size:.63rem;line-height:1.4}
 .series-article-porbo10p1 .kapila-section-map b{font-size:.62rem}
 }
-/* Touch-first devices can request a desktop-width layout; stack the article and keep the long contents list collapsible there too. */
-@media (pointer: coarse) {
-  .series-article-porbo10 .article-layout { display: block; }
-  .series-article-porbo10 .article-toc { position: static; top: auto; max-height: none; overflow: visible; padding: 14px clamp(16px, 4vw, 30px); border-bottom: 1px solid var(--line); }
-  .series-article-porbo10 .article-toc nav { grid-template-columns: minmax(0, 1fr); gap: 2px; }
-  .series-article-porbo10 #article { border-left: 0; padding: 14px clamp(18px, 4vw, 40px) 45px; }
-}
-
-/* Kapila–Devahuti standalone articles use a full-width contents panel, not a narrow left rail. Keep the reading column centered and editorial-sized on every viewport. */
-.series-article-porbo10 .article-layout{display:block;width:100%;max-width:1220px;margin:0 auto}
-.series-article-porbo10 #contents{position:static;top:auto;max-height:none;overflow:visible;padding:16px clamp(18px,4vw,40px);border-bottom:1px solid var(--line);background:#fbfaf7}
-.series-article-porbo10 #contents nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 18px}
-.series-article-porbo10 #contents a{grid-template-columns:28px minmax(0,1fr);align-items:start;padding:8px 10px;overflow-wrap:anywhere}
-.series-article-porbo10 .article-layout>#article{width:100%;max-width:1000px;margin:0 auto;border-left:0;padding:26px clamp(22px,4vw,40px) 55px}
-@media(max-width:620px){
-.series-article-porbo10 #contents{padding:12px 16px}
-.series-article-porbo10 #contents nav{grid-template-columns:minmax(0,1fr)}
-.series-article-porbo10 #contents a{padding:7px 6px}
-.series-article-porbo10 .article-layout>#article{padding:8px 18px 40px}
-}
-/* Explicit title elements prevent plain link text from entering the number rail. */
+/* Shared layout for both Kapila–Devahuti articles. */
+.series-article-porbo10 main.article-layout{display:grid;width:100%;max-width:1220px;margin:0 auto;grid-template-columns:260px minmax(0,1fr)}
+.series-article-porbo10 #contents{position:sticky;top:64px;align-self:start;min-width:0;max-height:calc(100vh - 80px);overflow:auto;padding:29px 21px;border-bottom:0;background:var(--paper)}
+.series-article-porbo10 #contents nav{grid-template-columns:minmax(0,1fr);gap:4px}
+.series-article-porbo10 #contents a{grid-template-columns:28px minmax(0,1fr);align-items:start;padding:8px 6px;overflow-wrap:break-word}
 .series-article-porbo10 #contents a .toc-number{grid-column:1;color:#b9683d}
 .series-article-porbo10 #contents a .toc-title{grid-column:2;min-width:0;color:inherit}
 .series-article-porbo10 #contents a .toc-title:only-child{grid-column:1/-1}
+.series-article-porbo10 .article-layout>#article{width:100%;min-width:0;margin:0;border-left:1px solid var(--line);padding:26px clamp(24px,4vw,55px) 55px}
+@media(max-width:1000px){
+.series-article-porbo10 main.article-layout{display:block}
+.series-article-porbo10 #contents{position:static;max-height:none;overflow:visible;padding:14px 20px;border-bottom:1px solid var(--line);background:#fbfaf7}
+.series-article-porbo10 .article-layout>#article{border-left:0;padding:14px clamp(18px,4vw,40px) 45px}
+}
+@media(max-width:620px){
+.series-article-porbo10 #contents{padding:12px 16px}
+.series-article-porbo10 .article-layout>#article{padding:8px 18px 40px}
+}
+@media print{.series-article-porbo10 main.article-layout{display:block}.series-article-porbo10 #contents{display:none}.series-article-porbo10 .article-layout>#article{border:0;padding:0}}
