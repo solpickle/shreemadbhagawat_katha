@@ -128,3 +128,10 @@ html{scroll-behavior:auto}
 .series-article-porbo10p1 .kapila-section-map span{padding:4px 2px;font-size:.63rem;line-height:1.4}
 .series-article-porbo10p1 .kapila-section-map b{font-size:.62rem}
 }
+/* Touch-first devices can request a desktop-width layout; stack the article and keep the long contents list collapsible there too. */
+@media (pointer: coarse) {
+  .series-article-porbo10 .article-layout { display: block; }
+  .series-article-porbo10 .article-toc { position: static; top: auto; max-height: none; overflow: visible; padding: 14px clamp(16px, 4vw, 30px); border-bottom: 1px solid var(--line); }
+  .series-article-porbo10 .article-toc nav { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .series-article-porbo10 #article { border-left: 0; padding: 14px clamp(18px, 4vw, 40px) 45px; }
+}
