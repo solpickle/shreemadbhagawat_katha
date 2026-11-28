@@ -15,8 +15,11 @@ assert(html.includes('data-tab="5">বিশদ পাঠ</button>'), "বিশ
 assert((html.match(/<button class="tab [^"]*" id="tab-/g) || []).length === 7, "Expected seven primary tabs");
 const primaryTabOrder = [...html.matchAll(/<button class="tab [^"]*" id="tab-\d+"[^>]*>([^<]+)<\/button>/g)].map(match => match[1]);
 assert(primaryTabOrder[0] === "পরিচয়" && primaryTabOrder[1] === "বিশদ পাঠ", "বিশদ পাঠ must follow পরিচয় in the primary tab order");
-assert(primaryTabOrder[2] === "শিক্ষা", "শিক্ষা must follow বিশদ পাঠ in the primary tab order");
+assert(primaryTabOrder[2] === "জীবনদর্শন", "জীবনদর্শন must follow বিশদ পাঠ in the primary tab order");
 assert(html.includes('href="articles/shikha-porbo-1-mon-kapilmuni.html"'), "শিক্ষাপর্ব ১ must open as an independent article");
+assert(html.includes('id="shikha-title">জীবনদর্শন</h2>'), "জীবনদর্শন tab heading is missing");
+assert(html.includes("শ্রীমদ্ভাগবত কেবল ভক্তির গ্রন্থ নয়, মানুষের মন, সম্পর্ক, আকাঙ্ক্ষা, কর্তব্য ও জীবনের গভীর অর্থ উপলব্ধি করারও এক অনন্য উৎস।"), "জীবনদর্শন introduction is missing");
+assert(html.includes("এই বিভাগে আমরা ভাগবতের প্রজ্ঞার আলোকে নিজেদের জীবনকে আরও সুন্দর, শান্ত ও অর্থপূর্ণ করে তোলার পথ অনুসন্ধান করব।"), "জীবনদর্শন introduction is incomplete");
 
 const embeddedMatch = html.match(/const storyData=([\s\S]*?);\r?\nconst tabs=/);
 assert(embeddedMatch, "Embedded story data is missing");

@@ -1540,8 +1540,8 @@ rendered.push({
 const shikhaIndex = rendered.length;
 rendered.push({
   id: "shikha",
-  title: "শিক্ষা",
-  html: `<header class="detailed-lessons-header"><p><span aria-hidden="true">◆</span> শিক্ষাপর্ব ১</p><h2 id="shikha-title">শিক্ষা</h2><p>${inline(shikha1Article.deck, true)}</p></header><section class="detailed-lessons" aria-labelledby="shikha-index-title"><div class="section-rule"><span>পাঠাগার</span></div><h3 id="shikha-index-title">শিক্ষাপর্ব</h3><div class="lesson-list"><article class="lesson-entry" id="shikha-porbo-1"><a class="lesson-open article-link" href="${shikha1ArticlePath}"><span class="lesson-mark" aria-hidden="true">◆</span><span class="lesson-card-body"><span class="lesson-card-kicker">শিক্ষাপর্ব ১</span><strong class="lesson-card-title">${inline(shikha1Article.title, true)}</strong><span class="lesson-card-reference">${inline(shikha1Article.deck, true)}</span></span><span class="lesson-card-arrow" aria-hidden="true">পড়ুন →</span></a></article></div></section>`,
+  title: "জীবনদর্শন",
+  html: `<div class="life-philosophy-page"><header class="life-philosophy-header"><p class="life-philosophy-kicker">প্রাচীন প্রজ্ঞা · আধুনিক জীবন · অন্তরের বিকাশ</p><h2 id="shikha-title">জীবনদর্শন</h2><p class="life-philosophy-subtitle"><strong>শ্রীমদ্ভাগবতের আলোয় মানুষের জীবন</strong></p><p class="life-philosophy-deck">প্রাচীন প্রজ্ঞা, আধুনিক জীবন ও অন্তরের বিকাশ</p><div class="life-philosophy-intro"><p>শ্রীমদ্ভাগবত কেবল ভক্তির গ্রন্থ নয়, মানুষের মন, সম্পর্ক, আকাঙ্ক্ষা, কর্তব্য ও জীবনের গভীর অর্থ উপলব্ধি করারও এক অনন্য উৎস। এই বিভাগে আমরা ভাগবতের প্রজ্ঞার আলোকে নিজেদের জীবনকে আরও সুন্দর, শান্ত ও অর্থপূর্ণ করে তোলার পথ অনুসন্ধান করব।</p></div></header><section class="detailed-lessons" aria-labelledby="shikha-index-title"><div class="section-rule"><span>পাঠাগার</span></div><h3 id="shikha-index-title">জীবনদর্শনের পাঠ</h3><div class="lesson-list"><article class="lesson-entry" id="shikha-porbo-1"><a class="lesson-open article-link" href="${shikha1ArticlePath}"><span class="lesson-mark" aria-hidden="true">◆</span><span class="lesson-card-body"><span class="lesson-card-kicker">শিক্ষাপর্ব ১</span><strong class="lesson-card-title">${inline(shikha1Article.title, true)}</strong><span class="lesson-card-reference">${inline(shikha1Article.deck, true)}</span></span><span class="lesson-card-arrow" aria-hidden="true">পড়ুন →</span></a></article></div></section></div>`,
   nav: [{ id: "shikha-porbo-1", title: shikha1Article.title }],
 });
 const tabOrder = rendered.map((_, index) => index);
@@ -1586,6 +1586,23 @@ const html = `<!DOCTYPE html>
 @media print{@page{margin:18mm 16mm}body{background:#fff!important;color:#000;font-size:11pt}.skip-link,.tabs,.side{display:none!important}.hero{padding:0 0 8mm;border:0;background:#fff}.eyebrow{font-size:9pt}.hero h1{font-size:26pt}.page{display:none!important}.page.active{display:block!important;max-width:none}.page.active main{padding:0;background:#fff}.content{max-width:none}.content h2,.content h3,.content h4{color:#000;break-after:avoid}.content p,.content li,.content td{color:#111}.content blockquote,.diagram-wrap,.editorial-map,.table-wrap,table,tr{break-inside:avoid;box-shadow:none}.content blockquote{border:1px solid #aaa;color:#111;background:#fff}.diagram-wrap,.editorial-map,.table-wrap{overflow:visible;border-color:#aaa;background:#fff}.diagram{min-width:0;white-space:pre-wrap;color:#111;background:#fff}.diagram-source{display:none}.map-node,.branch-card{background:#fff}table{min-width:0;font-size:9pt}th{color:#000;background:#eee}footer{padding:8mm 0 0;background:#fff;color:#444}}
 </style>
 <style>.article-link{text-decoration:none}.article-link:hover .lesson-card-title{color:#8f2b0c}</style>
+<style>
+.life-philosophy-page{max-width:1120px;margin:0 auto}
+.life-philosophy-header{margin:18px 0 28px;padding:34px clamp(20px,4vw,54px) 26px;border:1px solid #e2ded6;border-radius:16px;background:#fcfaf5}
+.life-philosophy-kicker{margin:0 0 8px!important;color:#a8320c!important;font-size:.78rem!important;letter-spacing:.025em}
+.content .life-philosophy-header h2{margin:0;color:#28231f;font-size:clamp(1.7rem,3vw,2.25rem);line-height:1.4;text-align:center}
+.life-philosophy-subtitle{margin:4px 0 0!important;color:#554b42!important;font-size:1.12rem!important;text-align:center}
+.life-philosophy-deck{margin:2px 0 0!important;color:#74695e!important;font-size:.95rem!important;text-align:center}
+.life-philosophy-intro{max-width:980px;margin:20px auto 0;padding-top:16px;border-top:1px solid #e2ded6}
+.life-philosophy-intro p{margin:0!important;color:#37312b;font-size:1rem;line-height:1.85}
+.life-philosophy-page .detailed-lessons{padding:0 clamp(0px,1vw,12px)}
+.life-philosophy-page .lesson-list{display:grid;gap:11px;border:0}
+.life-philosophy-page .lesson-entry{overflow:hidden;border:1px solid #e2ded6;border-radius:13px;background:#fff}
+.life-philosophy-page .lesson-open{padding:14px 17px}
+.life-philosophy-page .lesson-card-kicker{font-size:.75rem;letter-spacing:0}
+.life-philosophy-page .lesson-card-title{font-size:1.08rem}
+@media(max-width:850px){.life-philosophy-header{margin:10px 0 22px;padding:26px 20px 21px}.life-philosophy-subtitle{font-size:1.02rem!important}.life-philosophy-intro{margin-top:16px;padding-top:13px}.life-philosophy-page .detailed-lessons{padding:0}.life-philosophy-page .lesson-open{padding:13px 12px}}
+</style>
 <style>
 .content[data-content="0"]{max-width:50rem}
 .content .intro-heading{
