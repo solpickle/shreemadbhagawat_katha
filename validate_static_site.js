@@ -12,9 +12,11 @@ assert(html.startsWith("<!DOCTYPE html>"), "Main HTML document is missing its do
 assert(html.includes('<html lang="bn">'), "Bengali document language is missing");
 assert(html.includes(">গল্প ও শিক্ষা</button>"), "গল্প ও শিক্ষা tab is missing");
 assert(html.includes('data-tab="5">বিশদ পাঠ</button>'), "বিশদ পাঠ primary tab is missing");
-assert((html.match(/<button class="tab [^"]*" id="tab-/g) || []).length === 6, "Expected six primary tabs");
+assert((html.match(/<button class="tab [^"]*" id="tab-/g) || []).length === 7, "Expected seven primary tabs");
 const primaryTabOrder = [...html.matchAll(/<button class="tab [^"]*" id="tab-\d+"[^>]*>([^<]+)<\/button>/g)].map(match => match[1]);
 assert(primaryTabOrder[0] === "পরিচয়" && primaryTabOrder[1] === "বিশদ পাঠ", "বিশদ পাঠ must follow পরিচয় in the primary tab order");
+assert(primaryTabOrder[2] === "শিক্ষা", "শিক্ষা must follow বিশদ পাঠ in the primary tab order");
+assert(html.includes('href="articles/shikha-porbo-1-mon-kapilmuni.html"'), "শিক্ষাপর্ব ১ must open as an independent article");
 
 const embeddedMatch = html.match(/const storyData=([\s\S]*?);\r?\nconst tabs=/);
 assert(embeddedMatch, "Embedded story data is missing");
@@ -50,6 +52,17 @@ requiredFonts.forEach(font => assert(fs.existsSync(font), `Required font is miss
 
 const articlePath = 'articles/vishnu-cosmology.html';
 assert(html.includes(`href="${articlePath}"`), 'Standalone article link is missing from the library');
+const shikhaPath = 'articles/shikha-porbo-1-mon-kapilmuni.html';
+assert(html.includes(`href="${shikhaPath}"`), 'শিক্ষাপর্ব ১ independent article link is missing');
+const shikha = fs.readFileSync(shikhaPath, 'utf8');
+assert(shikha.includes('<body class="series-article series-article-shikha1">'), 'শিক্ষাপর্ব ১ must use the editorial standalone article layout');
+assert(shikha.includes('class="toc-number"') && shikha.includes('class="toc-title"'), 'শিক্ষাপর্ব ১ contents links need explicit number and title elements');
+assert(shikha.includes('#shikha-title'), 'শিক্ষাপর্ব ১ return link must reopen the শিক্ষা tab');
+assert(shikha.includes('id="shikha1-section-'), 'শিক্ষাপর্ব ১ section anchors are missing');
+assert(shikha.includes('href="../assets/article.css?v=shikha-20261128"'), 'শিক্ষাপর্ব ১ must use the shared editorial stylesheet');
+const shikhaScript = shikha.match(/<script>([\s\S]*?)<\/script>/);
+assert(shikhaScript, 'শিক্ষাপর্ব ১ reading controls are missing');
+new Function(shikhaScript[1]);
 const chotushlokiPath = 'articles/chotushloki-bhagavat.html';
 assert(html.includes(`href="${chotushlokiPath}"`), 'চতুঃশ্লোকী standalone article link is missing from the library');
 const krishnaVishnuPath = 'articles/krishna-vishnu-tattva.html';
@@ -171,7 +184,7 @@ new Function(brahmaScript[1]);
 
 console.log(JSON.stringify({
   html: htmlPath,
-  tabs: 6,
+  tabs: primaryTabOrder.length,
   skandhas: storyData.skandhas.length,
   stories: storyData.storyCount,
   expandedCards: storyData.details.length,
