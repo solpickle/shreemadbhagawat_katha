@@ -38,6 +38,8 @@ const shikha1ArticlePath = "articles/shikha-porbo-1-mon-kapilmuni.html";
 const shikha1Markdown = fs.readFileSync(path.join(__dirname, "..", "shikhaporbo1_mon_kopilmuni.md"), "utf8").replace(/\r\n/g, "\n");
 const shikha2ArticlePath = "articles/shikha-porbo-2-dhruva-jibon.html";
 const shikha2Markdown = fs.readFileSync(path.join(__dirname, "..", "shikhaporbo2_dhrubor_jibon.md"), "utf8").replace(/\r\n/g, "\n");
+const shikha3ArticlePath = "articles/shikha-porbo-3-daksha-mahadev.html";
+const shikha3Markdown = fs.readFileSync(path.join(__dirname, "..", "shikhaporbo3_dokho_mohadev.md"), "utf8").replace(/\r\n/g, "\n");
 
 function parseBlogArticle(markdown, filename) {
   const lines = markdown.trimEnd().split("\n");
@@ -122,6 +124,7 @@ const porbo14Article = parseSeriesArticle(porbo14Markdown, "porbo_14_ambarish.md
 const porbo15Article = parseSeriesArticle(porbo15Markdown, "porbo_15_udhabgita.md");
 const shikha1Article = parseSeriesArticle(shikha1Markdown, "shikhaporbo1_mon_kopilmuni.md");
 const shikha2Article = parseSeriesArticle(shikha2Markdown, "shikhaporbo2_dhrubor_jibon.md");
+const shikha3Article = parseSeriesArticle(shikha3Markdown, "shikhaporbo3_dokho_mohadev.md");
 
 function parseFrontmatter(markdown, filename) {
   const match = markdown.match(/^---\n([\s\S]*?)\n---\n/);
@@ -763,7 +766,7 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
   if (prefix === "intro" && !preserveSource) markdown = editIntroduction(markdown);
   if (prefix === "conversations") markdown = editConversations(markdown);
   if (prefix === "timeline") markdown = editTimeline(markdown);
-  if (["porbo4", "shibtotto", "krishnashakti", "radha", "porbo8", "porbo9", "porbo10", "porbo11", "porbo12", "porbo13", "porbo14", "porbo15", "shikha1", "shikha2"].includes(prefix)) {
+  if (["porbo4", "shibtotto", "krishnashakti", "radha", "porbo8", "porbo9", "porbo10", "porbo11", "porbo12", "porbo13", "porbo14", "porbo15", "shikha1", "shikha2", "shikha3"].includes(prefix)) {
     markdown = joinShortNarrativeParagraphs(markdown);
   }
   const lines = markdown.split("\n");
@@ -1551,10 +1554,11 @@ const shikhaIndex = rendered.length;
 rendered.push({
   id: "shikha",
   title: "জীবনদর্শন",
-  html: `<div class="life-philosophy-page"><header class="life-philosophy-header"><p class="life-philosophy-kicker">প্রাচীন প্রজ্ঞা · আধুনিক জীবন · অন্তরের বিকাশ</p><h2 id="shikha-title">জীবনদর্শন</h2><p class="life-philosophy-subtitle"><strong>শ্রীমদ্ভাগবতের আলোয় মানুষের জীবন</strong></p><p class="life-philosophy-deck">প্রাচীন প্রজ্ঞা, আধুনিক জীবন ও অন্তরের বিকাশ</p><div class="life-philosophy-intro"><p>শ্রীমদ্ভাগবত কেবল ভক্তির গ্রন্থ নয়, মানুষের মন, সম্পর্ক, আকাঙ্ক্ষা, কর্তব্য ও জীবনের গভীর অর্থ উপলব্ধি করারও এক অনন্য উৎস। এই বিভাগে আমরা ভাগবতের প্রজ্ঞার আলোকে নিজেদের জীবনকে আরও সুন্দর, শান্ত ও অর্থপূর্ণ করে তোলার পথ অনুসন্ধান করব।</p></div></header><section class="detailed-lessons" aria-labelledby="shikha-index-title"><div class="section-rule"><span>পাঠাগার</span></div><h3 id="shikha-index-title">জীবনদর্শনের পাঠ</h3><div class="lesson-list">${[renderLifePhilosophyArticleCard(shikha1Article, shikha1ArticlePath, 1), renderLifePhilosophyArticleCard(shikha2Article, shikha2ArticlePath, 2)].join("")}</div></section></div>`,
+  html: `<div class="life-philosophy-page"><header class="life-philosophy-header"><p class="life-philosophy-kicker">প্রাচীন প্রজ্ঞা · আধুনিক জীবন · অন্তরের বিকাশ</p><h2 id="shikha-title">জীবনদর্শন</h2><p class="life-philosophy-subtitle"><strong>শ্রীমদ্ভাগবতের আলোয় মানুষের জীবন</strong></p><p class="life-philosophy-deck">প্রাচীন প্রজ্ঞা, আধুনিক জীবন ও অন্তরের বিকাশ</p><div class="life-philosophy-intro"><p>শ্রীমদ্ভাগবত কেবল ভক্তির গ্রন্থ নয়, মানুষের মন, সম্পর্ক, আকাঙ্ক্ষা, কর্তব্য ও জীবনের গভীর অর্থ উপলব্ধি করারও এক অনন্য উৎস। এই বিভাগে আমরা ভাগবতের প্রজ্ঞার আলোকে নিজেদের জীবনকে আরও সুন্দর, শান্ত ও অর্থপূর্ণ করে তোলার পথ অনুসন্ধান করব।</p></div></header><section class="detailed-lessons" aria-labelledby="shikha-index-title"><div class="section-rule"><span>পাঠাগার</span></div><h3 id="shikha-index-title">জীবনদর্শনের পাঠ</h3><div class="lesson-list">${[renderLifePhilosophyArticleCard(shikha1Article, shikha1ArticlePath, 1), renderLifePhilosophyArticleCard(shikha2Article, shikha2ArticlePath, 2), renderLifePhilosophyArticleCard(shikha3Article, shikha3ArticlePath, 3)].join("")}</div></section></div>`,
   nav: [
     { id: "shikha-porbo-1", title: shikha1Article.title },
     { id: "shikha-porbo-2", title: shikha2Article.title },
+    { id: "shikha-porbo-3", title: shikha3Article.title },
   ],
 });
 const tabOrder = rendered.map((_, index) => index);
@@ -2316,10 +2320,12 @@ const shikha1Html = renderStandaloneSeriesArticle(shikha1Article, "shikha1", 1);
 fs.writeFileSync(path.join(__dirname, shikha1ArticlePath), shikha1Html, "utf8");
 const shikha2Html = renderStandaloneSeriesArticle(shikha2Article, "shikha2", 2);
 fs.writeFileSync(path.join(__dirname, shikha2ArticlePath), shikha2Html, "utf8");
+const shikha3Html = renderStandaloneSeriesArticle(shikha3Article, "shikha3", 3);
+fs.writeFileSync(path.join(__dirname, shikha3ArticlePath), shikha3Html, "utf8");
 const detailedLessonArticles = detailedLessons.map(lesson => {
   const articlePath = `articles/${lesson.id}.html`;
   const articleHtml = renderStandaloneDetailedLessonArticle(lesson);
   fs.writeFileSync(path.join(__dirname, articlePath), articleHtml, "utf8");
   return { path: articlePath, bytes: Buffer.byteLength(articleHtml) };
 });
-console.log(JSON.stringify({ chapters: rendered.length, detailedLessons: detailedLessons.length, standaloneArticles: [vishnuArticle.articlePath, chotushlokiArticlePath, krishnaVishnuArticlePath, choturdoshBhobanArticlePath, shibtottoArticlePath, krishnaShaktiArticlePath, radhaTattvaArticlePath, rasaGopigitaArticlePath, gitagovindaArticlePath, porbo10ArticlePath, porbo11ArticlePath, porbo12ArticlePath, porbo13ArticlePath, porbo14ArticlePath, porbo15ArticlePath, shikha1ArticlePath, shikha2ArticlePath, ...detailedLessonArticles.map(article => article.path)], sourceCharacters: chapters.reduce((n,x)=>n+x.markdown.length,0) + chotushlokiMarkdown.length + krishnaVishnuMarkdown.length + choturdoshBhobanMarkdown.length + shibtottoMarkdown.length + krishnaShaktiMarkdown.length + radhaTattvaMarkdown.length + rasaGopigitaMarkdown.length + gitagovindaMarkdown.length + porbo10Markdown.length + porbo11Markdown.length + porbo12Markdown.length + porbo13Markdown.length + porbo14Markdown.length + porbo15Markdown.length + shikha1Markdown.length + shikha2Markdown.length, outputBytes: Buffer.byteLength(html), shikha1Bytes: Buffer.byteLength(shikha1Html), shikha2Bytes: Buffer.byteLength(shikha2Html), detailedLessonArticles }, null, 2));
+console.log(JSON.stringify({ chapters: rendered.length, detailedLessons: detailedLessons.length, standaloneArticles: [vishnuArticle.articlePath, chotushlokiArticlePath, krishnaVishnuArticlePath, choturdoshBhobanArticlePath, shibtottoArticlePath, krishnaShaktiArticlePath, radhaTattvaArticlePath, rasaGopigitaArticlePath, gitagovindaArticlePath, porbo10ArticlePath, porbo11ArticlePath, porbo12ArticlePath, porbo13ArticlePath, porbo14ArticlePath, porbo15ArticlePath, shikha1ArticlePath, shikha2ArticlePath, shikha3ArticlePath, ...detailedLessonArticles.map(article => article.path)], sourceCharacters: chapters.reduce((n,x)=>n+x.markdown.length,0) + chotushlokiMarkdown.length + krishnaVishnuMarkdown.length + choturdoshBhobanMarkdown.length + shibtottoMarkdown.length + krishnaShaktiMarkdown.length + radhaTattvaMarkdown.length + rasaGopigitaMarkdown.length + gitagovindaMarkdown.length + porbo10Markdown.length + porbo11Markdown.length + porbo12Markdown.length + porbo13Markdown.length + porbo14Markdown.length + porbo15Markdown.length + shikha1Markdown.length + shikha2Markdown.length + shikha3Markdown.length, outputBytes: Buffer.byteLength(html), shikha1Bytes: Buffer.byteLength(shikha1Html), shikha2Bytes: Buffer.byteLength(shikha2Html), shikha3Bytes: Buffer.byteLength(shikha3Html), detailedLessonArticles }, null, 2));
