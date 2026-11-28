@@ -34,6 +34,8 @@ const porbo14ArticlePath = "articles/ambarisha-durvasa-story.html";
 const porbo14Markdown = fs.readFileSync(path.join(__dirname, "..", "porbo_14_ambarish.md"), "utf8").replace(/\r\n/g, "\n");
 const porbo15ArticlePath = "articles/uddhava-gita-path.html";
 const porbo15Markdown = fs.readFileSync(path.join(__dirname, "..", "porbo_15_udhabgita.md"), "utf8").replace(/\r\n/g, "\n");
+const shikha1ArticlePath = "articles/shikha-porbo-1-mon-kapilmuni.html";
+const shikha1Markdown = fs.readFileSync(path.join(__dirname, "..", "shikhaporbo1_mon_kopilmuni.md"), "utf8").replace(/\r\n/g, "\n");
 
 function parseBlogArticle(markdown, filename) {
   const lines = markdown.trimEnd().split("\n");
@@ -116,6 +118,7 @@ const porbo12Article = parseSeriesArticle(porbo12Markdown, "porbo_12_puranjan.md
 const porbo13Article = parseSeriesArticle(porbo13Markdown, "porbo_13_dhrubo.md");
 const porbo14Article = parseSeriesArticle(porbo14Markdown, "porbo_14_ambarish.md");
 const porbo15Article = parseSeriesArticle(porbo15Markdown, "porbo_15_udhabgita.md");
+const shikha1Article = parseSeriesArticle(shikha1Markdown, "shikhaporbo1_mon_kopilmuni.md");
 
 function parseFrontmatter(markdown, filename) {
   const match = markdown.match(/^---\n([\s\S]*?)\n---\n/);
@@ -757,7 +760,7 @@ function markdownToHtml(markdown, prefix, { preserveSource = false } = {}) {
   if (prefix === "intro" && !preserveSource) markdown = editIntroduction(markdown);
   if (prefix === "conversations") markdown = editConversations(markdown);
   if (prefix === "timeline") markdown = editTimeline(markdown);
-  if (["porbo4", "shibtotto", "krishnashakti", "radha", "porbo8", "porbo9", "porbo10", "porbo11", "porbo12", "porbo13", "porbo14", "porbo15"].includes(prefix)) {
+  if (["porbo4", "shibtotto", "krishnashakti", "radha", "porbo8", "porbo9", "porbo10", "porbo11", "porbo12", "porbo13", "porbo14", "porbo15", "shikha1"].includes(prefix)) {
     markdown = joinShortNarrativeParagraphs(markdown);
   }
   const lines = markdown.split("\n");
@@ -1454,19 +1457,25 @@ function renderStandaloneSeriesArticle(article, prefix, partNumber) {
     const numbered = item.title.match(/^([০-৯]+\.)\s*(.*)$/u);
     const number = numbered ? inline(numbered[1], true) : "·";
     const title = numbered ? numbered[2] : item.title;
-    return `<a href="#${item.id}"><span>${number}</span>${inline(title, true)}</a>`;
+    return prefix === "shikha1"
+      ? `<a href="#${item.id}"><span class="toc-number">${number}</span><span class="toc-title">${inline(title, true)}</span></a>`
+      : `<a href="#${item.id}"><span>${number}</span>${inline(title, true)}</a>`;
   }).join("");
   const metadata = article.metadata.map(line => `<p>${inline(line, true)}</p>`).join("");
   const title = inline(article.title, true);
   const deck = inline(article.deck, true);
   const deckHtml = article.deck ? `<p class="article-deck">${deck}</p>` : "";
   const metadataHtml = metadata ? `<div class="article-meta-lines">${metadata}</div>` : "";
+  const returnLabel = prefix === "shikha1" ? "শিক্ষায় ফিরুন" : "বিশদ পাঠে ফিরুন";
+  const returnTarget = prefix === "shikha1" ? "#shikha-title" : "#detailed-lessons-title";
+  const eyebrow = prefix === "shikha1" ? "শিক্ষা · শিক্ষাপর্ব ১" : `বিশদ পাঠ · পর্ব ${toBengaliDigits(partNumber)}`;
+  const tocInitialization = prefix === "shikha1" ? `const tocDetails=document.querySelector('.article-toc details');if(tocDetails)tocDetails.open=!matchMedia('(max-width: 1000px)').matches;` : "";
   return `<!DOCTYPE html>
-<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} | শ্রীমদ্ভাগবত কথা</title><meta name="description" content="${escapeHtml(article.deck || article.title)}"><meta name="theme-color" content="#f8f6f1"><link rel="stylesheet" href="../assets/article.css"></head>
-<body class="series-article series-article-${prefix}"><a class="skip-link" href="#article">মূল লেখায় যান</a><div class="reading-progress" aria-hidden="true"></div><header class="article-topbar"><a href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">← বিশদ পাঠে ফিরুন</a><a class="site-name" href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">শ্রীমদ্ভাগবত কথা</a><a href="#contents">সূচিপত্র</a></header>
-<header class="article-hero"><p class="eyebrow">বিশদ পাঠ · পর্ব ${toBengaliDigits(partNumber)}</p><h1>${title}</h1>${deckHtml}${metadataHtml}</header>
-<main class="article-layout"><aside class="article-toc" id="contents" aria-label="পাঠের সূচিপত্র"><details open><summary>এই পাঠের সূচি</summary><nav>${tocItems}</nav></details></aside><article id="article"><div class="article-part">${renderedArticle.html}</div><footer class="article-end"><p>এই পাঠটি শেষ করেছেন?</p><a href="../srimad_bhagavatam_bengali_explorer.html#detailed-lessons-title">← বিশদ পাঠে ফিরে যান</a></footer></article></main>
-<script>const progress=document.querySelector('.reading-progress');function updateProgress(){const root=document.documentElement;const available=root.scrollHeight-root.clientHeight;progress.style.width=(available>0?root.scrollTop/available*100:0)+'%'}addEventListener('scroll',updateProgress,{passive:true});updateProgress();</script></body></html>`;
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} | শ্রীমদ্ভাগবত কথা</title><meta name="description" content="${escapeHtml(article.deck || article.title)}"><meta name="theme-color" content="#f8f6f1"><link rel="stylesheet" href="../assets/article.css${prefix === "shikha1" ? "?v=shikha-20261128" : ""}"></head>
+<body class="series-article series-article-${prefix}"><a class="skip-link" href="#article">মূল লেখায় যান</a><div class="reading-progress" aria-hidden="true"></div><header class="article-topbar"><a href="../srimad_bhagavatam_bengali_explorer.html${returnTarget}">← ${returnLabel}</a><a class="site-name" href="../srimad_bhagavatam_bengali_explorer.html${returnTarget}">শ্রীমদ্ভাগবত কথা</a><a href="#contents">সূচিপত্র</a></header>
+<header class="article-hero"><p class="eyebrow">${eyebrow}</p><h1>${title}</h1>${deckHtml}${metadataHtml}</header>
+<main class="article-layout"><aside class="article-toc" id="contents" aria-label="পাঠের সূচিপত্র"><details${prefix === "shikha1" ? "" : " open"}><summary>এই পাঠের সূচি</summary><nav>${tocItems}</nav></details></aside><article id="article"><div class="article-part">${renderedArticle.html}</div><footer class="article-end"><p>এই পাঠটি শেষ করেছেন?</p><a href="../srimad_bhagavatam_bengali_explorer.html${returnTarget}">← ${returnLabel}</a></footer></article></main>
+<script>const progress=document.querySelector('.reading-progress');function updateProgress(){const root=document.documentElement;const available=root.scrollHeight-root.clientHeight;progress.style.width=(available>0?root.scrollTop/available*100:0)+'%'}addEventListener('scroll',updateProgress,{passive:true});updateProgress();${tocInitialization}</script></body></html>`;
 }
 
 function renderStandaloneDetailedLessonArticle(lesson) {
@@ -1528,10 +1537,19 @@ rendered.push({
   ],
   detailedLessonModule: true,
 });
+const shikhaIndex = rendered.length;
+rendered.push({
+  id: "shikha",
+  title: "শিক্ষা",
+  html: `<header class="detailed-lessons-header"><p><span aria-hidden="true">◆</span> শিক্ষাপর্ব ১</p><h2 id="shikha-title">শিক্ষা</h2><p>${inline(shikha1Article.deck, true)}</p></header><section class="detailed-lessons" aria-labelledby="shikha-index-title"><div class="section-rule"><span>পাঠাগার</span></div><h3 id="shikha-index-title">শিক্ষাপর্ব</h3><div class="lesson-list"><article class="lesson-entry" id="shikha-porbo-1"><a class="lesson-open article-link" href="${shikha1ArticlePath}"><span class="lesson-mark" aria-hidden="true">◆</span><span class="lesson-card-body"><span class="lesson-card-kicker">শিক্ষাপর্ব ১</span><strong class="lesson-card-title">${inline(shikha1Article.title, true)}</strong><span class="lesson-card-reference">${inline(shikha1Article.deck, true)}</span></span><span class="lesson-card-arrow" aria-hidden="true">পড়ুন →</span></a></article></div></section>`,
+  nav: [{ id: "shikha-porbo-1", title: shikha1Article.title }],
+});
 const tabOrder = rendered.map((_, index) => index);
 const detailedLessonsTabIndex = rendered.findIndex(item => item.id === "detailed-lessons");
 tabOrder.splice(tabOrder.indexOf(detailedLessonsTabIndex), 1);
 tabOrder.splice(1, 0, detailedLessonsTabIndex);
+tabOrder.splice(tabOrder.indexOf(shikhaIndex), 1);
+tabOrder.splice(tabOrder.indexOf(detailedLessonsTabIndex) + 1, 0, shikhaIndex);
 
 const html = `<!DOCTYPE html>
 <html lang="bn">
@@ -2264,10 +2282,12 @@ const porbo14Html = renderStandaloneSeriesArticle(porbo14Article, "porbo14", 14)
 fs.writeFileSync(path.join(__dirname, porbo14ArticlePath), porbo14Html, "utf8");
 const porbo15Html = renderStandaloneSeriesArticle(porbo15Article, "porbo15", 15);
 fs.writeFileSync(path.join(__dirname, porbo15ArticlePath), porbo15Html, "utf8");
+const shikha1Html = renderStandaloneSeriesArticle(shikha1Article, "shikha1", 1);
+fs.writeFileSync(path.join(__dirname, shikha1ArticlePath), shikha1Html, "utf8");
 const detailedLessonArticles = detailedLessons.map(lesson => {
   const articlePath = `articles/${lesson.id}.html`;
   const articleHtml = renderStandaloneDetailedLessonArticle(lesson);
   fs.writeFileSync(path.join(__dirname, articlePath), articleHtml, "utf8");
   return { path: articlePath, bytes: Buffer.byteLength(articleHtml) };
 });
-console.log(JSON.stringify({ chapters: rendered.length, detailedLessons: detailedLessons.length, standaloneArticles: [vishnuArticle.articlePath, chotushlokiArticlePath, krishnaVishnuArticlePath, choturdoshBhobanArticlePath, shibtottoArticlePath, krishnaShaktiArticlePath, radhaTattvaArticlePath, rasaGopigitaArticlePath, gitagovindaArticlePath, porbo10ArticlePath, porbo11ArticlePath, porbo12ArticlePath, porbo13ArticlePath, porbo14ArticlePath, porbo15ArticlePath, ...detailedLessonArticles.map(article => article.path)], sourceCharacters: chapters.reduce((n,x)=>n+x.markdown.length,0) + chotushlokiMarkdown.length + krishnaVishnuMarkdown.length + choturdoshBhobanMarkdown.length + shibtottoMarkdown.length + krishnaShaktiMarkdown.length + radhaTattvaMarkdown.length + rasaGopigitaMarkdown.length + gitagovindaMarkdown.length + porbo10Markdown.length + porbo11Markdown.length + porbo12Markdown.length + porbo13Markdown.length + porbo14Markdown.length + porbo15Markdown.length, outputBytes: Buffer.byteLength(html), chotushlokiBytes: Buffer.byteLength(chotushlokiHtml), krishnaVishnuBytes: Buffer.byteLength(krishnaVishnuHtml), choturdoshBhobanBytes: Buffer.byteLength(choturdoshBhobanHtml), shibtottoBytes: Buffer.byteLength(shibtottoHtml), krishnaShaktiBytes: Buffer.byteLength(krishnaShaktiHtml), radhaTattvaBytes: Buffer.byteLength(radhaTattvaHtml), rasaGopigitaBytes: Buffer.byteLength(rasaGopigitaHtml), gitagovindaBytes: Buffer.byteLength(gitagovindaHtml), porbo10Bytes: Buffer.byteLength(porbo10Html), porbo11Bytes: Buffer.byteLength(porbo11Html), porbo12Bytes: Buffer.byteLength(porbo12Html), porbo13Bytes: Buffer.byteLength(porbo13Html), porbo14Bytes: Buffer.byteLength(porbo14Html), porbo15Bytes: Buffer.byteLength(porbo15Html), detailedLessonArticles }, null, 2));
+console.log(JSON.stringify({ chapters: rendered.length, detailedLessons: detailedLessons.length, standaloneArticles: [vishnuArticle.articlePath, chotushlokiArticlePath, krishnaVishnuArticlePath, choturdoshBhobanArticlePath, shibtottoArticlePath, krishnaShaktiArticlePath, radhaTattvaArticlePath, rasaGopigitaArticlePath, gitagovindaArticlePath, porbo10ArticlePath, porbo11ArticlePath, porbo12ArticlePath, porbo13ArticlePath, porbo14ArticlePath, porbo15ArticlePath, shikha1ArticlePath, ...detailedLessonArticles.map(article => article.path)], sourceCharacters: chapters.reduce((n,x)=>n+x.markdown.length,0) + chotushlokiMarkdown.length + krishnaVishnuMarkdown.length + choturdoshBhobanMarkdown.length + shibtottoMarkdown.length + krishnaShaktiMarkdown.length + radhaTattvaMarkdown.length + rasaGopigitaMarkdown.length + gitagovindaMarkdown.length + porbo10Markdown.length + porbo11Markdown.length + porbo12Markdown.length + porbo13Markdown.length + porbo14Markdown.length + porbo15Markdown.length + shikha1Markdown.length, outputBytes: Buffer.byteLength(html), shikha1Bytes: Buffer.byteLength(shikha1Html), detailedLessonArticles }, null, 2));
